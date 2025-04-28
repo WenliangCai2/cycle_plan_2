@@ -87,4 +87,4 @@ def get_time():
 # Only execute when running this file directly
 if __name__ == '__main__':
     # Start application
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)
