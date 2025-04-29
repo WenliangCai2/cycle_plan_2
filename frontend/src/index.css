@@ -6,8 +6,93 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+ 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+ 
+/* POI control panel styling - add this to your CSS files */
+.poi-control-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: white;
+  border-radius: 5px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  z-index: 1000;
+  width: 250px;
+  font-family: Arial, sans-serif;
+}
+ 
+.poi-controls h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+ 
+.poi-controls label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+ 
+.poi-controls input,
+.poi-controls select {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+ 
+.poi-controls button {
+  background: #0099FF;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+ 
+.poi-controls button:hover {
+  background: #0077CC;
+}
+ 
+/* POI info bubble styling */
+.poi-info-bubble {
+  padding: 10px;
+  max-width: 250px;
+  font-family: Arial, sans-serif;
+}
+ 
+.poi-info-bubble h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #333;
+}
+ 
+.poi-info-bubble p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #555;
+}
+ 
+.poi-info-bubble a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #0099FF;
+  text-decoration: none;
+  font-weight: bold;
+}
+ 
+.poi-info-bubble a:hover {
+  text-decoration: underline;
 }
