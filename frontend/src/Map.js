@@ -8,7 +8,7 @@ const Map = (props) => {
     const { apikey, userPosition, selectedLocations, onMapClick, customPoints, restaurantList, loading } = props;
 
     useEffect(() => {
-        // Initialize platform if not done yet
+        // Initialize platform if not done yet.
         if (!platform.current) {
             platform.current = new H.service.Platform({ apikey });
         }
