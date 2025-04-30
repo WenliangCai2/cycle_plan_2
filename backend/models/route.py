@@ -114,14 +114,22 @@ class Route:
         return result.modified_count > 0
     
     @staticmethod
-    def get_public_routes(limit=20, skip=0):
+    def get_public_routes(limit=20, skip=0, sort_by='vote_score', sort_order='desc'):
         """Get all publicly shared routes"""
         global db
         if db is None:
             return []
             
+        # Determine sort direction
+        sort_direction = -1 if sort_order.lower() == 'desc' else 1
+        
+        # Ensure sort field is valid
+        valid_sort_fields = ['vote_score', 'share_count', 'avg_rating', 'created_at']
+        if sort_by not in valid_sort_fields:
+            sort_by = 'vote_score'  # Default to sort by vote score
+        
         route_dicts = db.routes.find(
             {'is_public': True}
-        ).sort('share_count', -1).skip(skip).limit(limit)
+        ).sort(sort_by, sort_direction).skip(skip).limit(limit)
         
         return [Route.from_dict(route_dict) for route_dict in route_dicts] 

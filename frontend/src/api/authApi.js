@@ -4,7 +4,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -51,6 +51,14 @@ export const register = async (username, password) => {
     console.log('Sending registration request:', { username, password: '******' });
     const response = await api.post('/register', { username, password });
     console.log('Registration response:', response.data);
+    
+    // Save token, userId, and username to localStorage
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.userId);
+      localStorage.setItem('username', username); // Save username
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Registration error:', error);
@@ -69,6 +77,14 @@ export const login = async (username, password) => {
     console.log('Sending login request:', { username, password: '******' });
     const response = await api.post('/login', { username, password });
     console.log('Login response:', response.data);
+    
+    // Save token, userId, and username to localStorage
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.userId);
+      localStorage.setItem('username', username); // Save username
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Login error:', error);
@@ -102,13 +118,23 @@ export const logout = async () => {
     // Regardless of backend response, clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('username'); // Also remove username
     return response.data;
   } catch (error) {
     // Even if request fails, clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('username'); // Also remove username
     throw error.response?.data || { success: false, message: 'Logout failed' };
   }
+};
+
+/**
+ * Get current username
+ * @returns {string|null} - Username or null
+ */
+export const getCurrentUsername = () => {
+  return localStorage.getItem('username');
 };
 
 export default {
@@ -117,4 +143,5 @@ export default {
   isAuthenticated,
   getCurrentUserId,
   logout,
+  getCurrentUsername,
 }; 

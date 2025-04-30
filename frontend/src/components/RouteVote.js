@@ -52,7 +52,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
   // Update the UI immediately and then send the request
   const handleVoteWithOptimisticUI = async (voteType) => {
     if (!isAuthenticated) {
-      message.warning('请先登录再进行投票');
+      message.warning('Please login to vote');
       navigate('/login');
       return;
     }
@@ -112,7 +112,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
     
     // Display a temporary success message
     if (userVote === voteType) {
-      message.success('The vote has been cancelled.');
+      message.success('The vote has been cancelled');
     } else {
       message.success(voteType === 1 ? 'Liked' : 'Disliked');
     }
@@ -148,7 +148,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
         setDownvotes(previousState.downvotes);
         setVoteScore(previousState.voteScore);
         setUserVote(previousState.userVote);
-        message.error('Voting failed, please try again later.');
+        message.error('Voting failed, please try again later');
       }
     } catch (error) {
       console.error('Vote error:', error);
@@ -157,7 +157,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       setDownvotes(previousState.downvotes);
       setVoteScore(previousState.voteScore);
       setUserVote(previousState.userVote);
-      message.error(error.message || 'Voting failed, please try again later.');
+      message.error(error.message || 'Voting failed, please try again later');
     } finally {
       setLoading(false);
     }

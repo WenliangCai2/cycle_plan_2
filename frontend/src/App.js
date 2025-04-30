@@ -2,14 +2,14 @@ import Map from './Map';
 import React, { useState, useEffect } from 'react';
 import RestaurantList from "./RestaurantList";
 import LoginForm from './LoginForm';
-import { createCustomPoint, getCustomPoints, deleteCustomPoint } from './api/customPointApi';
+import { createCustomPoint, getCustomPoints } from './api/customPointApi';
 import { createRoute, getRoutes, deleteRoute } from './api/routeApi';
 import { logout } from './api/authApi';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import RouteDetail from './components/RouteDetail';
 import PublicRoutesList from './components/PublicRoutesList';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 
 const apikey = '8kY020yd2oSy4ivQKBlxf_a5Bhtizzu0A9deSUakGz8';
 
@@ -31,6 +31,7 @@ const MainApp = () => {
     const userId = localStorage.getItem('userId');
     const [userPosition, setUserPosition] = useState(defaultPosition);
     const [locationLoading, setLocationLoading] = useState(true);
+    const username = localStorage.getItem('username') || 'User'; // Get username from localStorage
 
     // Get user's current location
     useEffect(() => {
@@ -74,7 +75,21 @@ const MainApp = () => {
                 // Load custom points
                 const pointsResponse = await getCustomPoints();
                 if (pointsResponse.success) {
-                    setCustomPoints(pointsResponse.customPoints || []);
+                    // 确保每个自定义点有正确的isCustom标记和point_id
+                    const customPoints = (pointsResponse.customPoints || []).map(point => {
+                        console.log("Processing custom point from backend:", point);
+                        // Make sure each point has the required properties
+                        return {
+                            ...point,
+                            isCustom: true, // 确保有isCustom标记
+                            point_id: point.point_id, // 确保有point_id
+                            location: point.location || {} // 确保location存在
+                        };
+                    });
+                    console.log('Loaded custom points:', customPoints);
+                    setCustomPoints(customPoints);
+                } else {
+                    console.error("Failed to load custom points:", pointsResponse.message);
                 }
                 
                 // Load routes
@@ -91,8 +106,10 @@ const MainApp = () => {
     }, []);
 
     // Handle login success
-    const handleLoginSuccess = (newUserId) => {
+    const handleLoginSuccess = (newUserId, newUsername) => {
+        console.log("User logged in successfully:", newUserId, newUsername);
         localStorage.setItem('userId', newUserId);
+        localStorage.setItem('username', newUsername);
     };
 
     // Handle logout
@@ -100,6 +117,8 @@ const MainApp = () => {
         try {
             await logout();
             localStorage.removeItem('userId');
+            localStorage.removeItem('username'); // Also remove username
+            localStorage.removeItem('token'); // Remove token
             // Clear user data
             setSelectedRestaurants([]);
             setCustomPoints([]);
@@ -110,6 +129,8 @@ const MainApp = () => {
             console.error('Logout failed:', error);
             // Even if API call fails, clear local state and navigate to login page
             localStorage.removeItem('userId');
+            localStorage.removeItem('username'); // Also remove username
+            localStorage.removeItem('token'); // Remove token
             setSelectedRestaurants([]);
             setCustomPoints([]);
             setSavedRoutes([]);
@@ -122,9 +143,22 @@ const MainApp = () => {
         e.preventDefault();
         if (routeName && selectedRestaurants.length > 0) {
             try {
+                // Ensure each location in the route has all necessary properties
+                const processedLocations = selectedRestaurants.map(location => {
+                    // Make sure custom points have proper attributes
+                    if (location.isCustom) {
+                        return {
+                            ...location,
+                            point_id: location.point_id, // Ensure point_id is included
+                            isCustom: true
+                        };
+                    }
+                    return location;
+                });
+                
                 const newRoute = {
                     name: routeName,
-                    locations: [...selectedRestaurants], // Copy current selected locations
+                    locations: processedLocations,
                     is_public: false, // Default to private
                     user_id: userId // Use user_id to match backend model
                 };
@@ -183,20 +217,32 @@ const MainApp = () => {
                 
                 if (response.success) {
                     console.log('Custom point saved successfully:', response);
-                    // If backend returns a point object with id, use it, otherwise use locally created
-                    const savedPoint = response.point || newPoint;
+                    // 确保返回的点位有正确的属性
+                    const savedPoint = {
+                        ...(response.point || newPoint),
+                        isCustom: true, // 确保有isCustom标记
+                        point_id: response.point?.point_id || newPoint.point_id, // Ensure point_id exists
+                    };
+                    console.log('Saving point with data:', savedPoint);
                     setCustomPoints(prev => [...prev, savedPoint]);
+                    message.success('Custom point added successfully');
+                    
+                    // Show instructions to the user about using the custom point
+                    message.info('Click on the custom point to add it to your current route');
                 } else {
                     console.error('Failed to save custom point:', response.message);
+                    message.error('Failed to add custom point: ' + response.message);
                 }
                 
                 setNewPointName('');
                 setNewPointLocation({ lat: null, lng: null });
             } catch (error) {
                 console.error('Error saving custom point:', error);
+                message.error('Error adding custom point');
             }
         } else {
             console.error('Missing name or location'); // Log error
+            message.warning('Please provide both a name and select a location on the map');
         }
     };
 
@@ -204,6 +250,61 @@ const MainApp = () => {
     const handleMapClick = (lat, lng) => {
         console.log('Map click received:', lat, lng); // Log map click
         setNewPointLocation({ lat, lng });
+    };
+
+    // Handle route deletion using fetch API instead of axios
+    const handleDeleteRoute = async (routeId, e) => {
+        // 如果有事件对象传入，阻止事件冒泡
+        if (e) {
+            e.stopPropagation();
+        }
+        
+        if (!routeId) {
+            console.error("Cannot delete route: no route ID provided");
+            message.error("Cannot delete route: missing ID");
+            return;
+        }
+        
+        if (window.confirm(`Are you sure you want to delete this route? This action cannot be undone.`)) {
+            try {
+                console.log("Attempting to delete route with ID:", routeId);
+                
+                // Get token for authentication
+                const token = localStorage.getItem('token');
+                
+                // Use direct fetch API
+                const response = await fetch(
+                    `http://localhost:5000/api/routes/${routeId}`, 
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': token || '',
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
+                console.log("Delete route response status:", response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Delete route response data:", data);
+                    
+                    if (data.success) {
+                        // Remove route from state
+                        setSavedRoutes(prev => prev.filter(route => route.route_id !== routeId));
+                        message.success('Route deleted successfully');
+                    } else {
+                        message.error(`Delete failed: ${data.message || 'Unknown error'}`);
+                    }
+                } else {
+                    message.error(`Server error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error deleting route:', error);
+                message.error(`Failed to delete route: ${error.message || 'Unknown error'}`);
+            }
+        }
     };
 
     // Create a current location point object
@@ -232,7 +333,7 @@ const MainApp = () => {
             }}>
                 {/* User info and logout button */}
                 <div style={{marginBottom: '20px', textAlign: 'center'}}>
-                    <h3 style={{margin: '0 0 10px 0'}}>Welcome User: {userId}</h3>
+                    <h3 style={{margin: '0 0 10px 0'}}>Welcome: {username}</h3>
                     <button 
                         onClick={handleLogout}
                         style={{...styles.button, backgroundColor: '#dc3545'}}
@@ -343,20 +444,43 @@ const MainApp = () => {
                                         {new Date(route.created_at || route.createdAt).toLocaleDateString()}
                                     </small>
                                 </div>
-                                <button
-                                    onClick={() => navigate(`/routes/${route.route_id}`)}
-                                    style={{
-                                        padding: '4px 8px',
-                                        backgroundColor: '#007bff',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px'
-                                    }}
-                                >
-                                    View Details
-                                </button>
+                                <div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/routes/${route.route_id}`);
+                                        }}
+                                        style={{
+                                            padding: '4px 8px',
+                                            backgroundColor: '#007bff',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '12px',
+                                            marginRight: '5px'
+                                        }}
+                                    >
+                                        View Details
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteRoute(route.route_id, e);
+                                        }}
+                                        style={{
+                                            padding: '4px 8px',
+                                            backgroundColor: '#dc3545',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '12px'
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -368,10 +492,11 @@ const MainApp = () => {
 
 // Main App component
 function App() {
-    // 在App级别定义handleLoginSuccess函数
-    const handleLoginSuccess = (userId) => {
-        console.log("User logged in successfully:", userId);
-
+    // Define handleLoginSuccess function at App level
+    const handleLoginSuccess = (userId, username) => {
+        console.log("User logged in successfully:", userId, username);
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('username', username);
     };
 
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Drawer, Avatar, Dropdown, Badge, Space, Tooltip } from 'antd';
-import { Link, useLocation, useHistory } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   MenuOutlined, UserOutlined, BellOutlined, HeartOutlined, 
   LogoutOutlined, SettingOutlined, CompassOutlined,
@@ -18,12 +18,16 @@ const Header = () => {
   const [visible, setVisible] = useState(false);
   const [notificationsVisible, setNotificationsVisible] = useState(false);
   const location = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const isAuthenticated = useSelector(state => state.user.isAuthenticated);
-  const currentUser = useSelector(state => state.user.currentUser);
-  const notifications = useSelector(state => state.notifications.items);
+  const isAuthenticated = useSelector(state => state.user?.isAuthenticated) || !!localStorage.getItem('token');
+  const currentUser = useSelector(state => state.user?.currentUser);
+  const username = localStorage.getItem('username') || (currentUser?.username) || 'User';
+  const userId = localStorage.getItem('userId') || (currentUser?.id);
+  
+  // For notifications, if you have them
+  const notifications = useSelector(state => state.notifications?.items) || [];
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // Reset drawer visibility on location change
@@ -32,15 +36,22 @@ const Header = () => {
   }, [location.pathname]);
 
   const handleLogout = () => {
-    dispatch(logout());
-    history.push('/');
+    if (dispatch) {
+      dispatch(logout());
+    } else {
+      // Fallback if redux is not available
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+    }
+    navigate('/');
   };
 
   const userMenuItems = [
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: <Link to={`/users/${currentUser?.id}`}>Profile</Link>
+      label: <Link to={`/users/${userId}`}>Profile</Link>
     },
     {
       key: 'favorites',
@@ -116,19 +127,20 @@ const Header = () => {
                   trigger={['click']}
                   placement="bottomRight"
                 >
-                  <Avatar 
-                    src={currentUser?.avatar} 
-                    icon={!currentUser?.avatar && <UserOutlined />}
-                    style={{ cursor: 'pointer' }}
-                  />
+                  <Button type="text">
+                    <Space>
+                      <Avatar icon={<UserOutlined />} />
+                      {username}
+                    </Space>
+                  </Button>
                 </Dropdown>
               </>
             ) : (
               <Space>
-                <Button type="link" onClick={() => history.push('/login')}>
+                <Button type="link" onClick={() => navigate('/login')}>
                   Login
                 </Button>
-                <Button type="primary" onClick={() => history.push('/register')}>
+                <Button type="primary" onClick={() => navigate('/register')}>
                   Register
                 </Button>
               </Space>
@@ -151,6 +163,13 @@ const Header = () => {
         onClose={() => setVisible(false)}
         open={visible}
       >
+        {isAuthenticated && (
+          <div style={{ padding: '10px', marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
+            <Avatar icon={<UserOutlined />} style={{ marginRight: '8px' }} />
+            <span>{username}</span>
+          </div>
+        )}
+        
         <Menu
           mode="vertical"
           selectedKeys={[location.pathname.split('/')[1] || 'home']}

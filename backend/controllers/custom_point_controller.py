@@ -70,13 +70,14 @@ def delete_custom_point(point_id):
             'success': False, 
             'message': 'not registered user'
         }), 401
-
+    
+    # Point usage check removed
     success = CustomPoint.delete_point(point_id, user_id)
     
     if not success:
         return jsonify({
             'success': False,
-            'message': 'fail to delete point'
+            'message': 'Failed to delete point. It may not exist or you do not have permission to delete it.'
         }), 404
     
     return jsonify({

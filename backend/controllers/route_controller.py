@@ -158,9 +158,11 @@ def get_public_routes():
     """Get all publicly shared routes"""
     page = request.args.get('page', 1, type=int)
     limit = request.args.get('limit', 20, type=int)
+    sort_by = request.args.get('sort_by', 'vote_score')
+    sort_order = request.args.get('sort_order', 'desc')
     skip = (page - 1) * limit
     
-    routes = Route.get_public_routes(limit=limit, skip=skip)
+    routes = Route.get_public_routes(limit=limit, skip=skip, sort_by=sort_by, sort_order=sort_order)
     route_dicts = [route.to_dict() for route in routes]
     
     return jsonify({

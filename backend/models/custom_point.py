@@ -84,6 +84,6 @@ class CustomPoint:
         if db is None:
             print("Warning: Database connection not set, deletion failed")
             return False
-            
+        
         result = db.custom_points.delete_one({'point_id': point_id, 'user_id': user_id})
         return result.deleted_count > 0 

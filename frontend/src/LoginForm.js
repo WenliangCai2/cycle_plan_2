@@ -28,9 +28,9 @@ const LoginForm = ({ onLoginSuccess }) => {
 
             // Select interface according to status
             if (isResettingPassword) {
-                endpoint = 'http://localhost:5001/api/reset_password';
+                endpoint = 'http://localhost:5000/api/reset_password';
             } else {
-                endpoint = isLogin ? 'http://localhost:5001/api/login' : 'http://localhost:5001/api/register';
+                endpoint = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/register';
             }
 
             const payload = isResettingPassword
@@ -52,7 +52,8 @@ const LoginForm = ({ onLoginSuccess }) => {
                 } else {
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('userId', response.data.userId);
-                    onLoginSuccess(response.data.userId);
+                    localStorage.setItem('username', username);
+                    onLoginSuccess(response.data.userId, username);
                     navigate('/');
                 }
             } else {

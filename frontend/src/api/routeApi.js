@@ -4,7 +4,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -64,12 +64,9 @@ export const createRoute = async (route) => {
  * @returns {Promise} - Promise containing deletion result
  */
 export const deleteRoute = async (routeId) => {
-  try {
-    const response = await api.delete(`/routes/${routeId}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { success: false, message: 'Failed to delete route' };
-  }
+  console.log(`This function is deprecated and should not be called.`);
+  console.log(`The deletion is now handled directly in the App component using fetch API.`);
+  return { success: false, message: 'This function is deprecated' };
 };
 
 /**
@@ -105,11 +102,13 @@ export const updateRouteVisibility = async (routeId, isPublic) => {
  * Get all public routes
  * @param {number} page - Page number
  * @param {number} limit - Number of routes per page
+ * @param {string} sortBy - Field to sort by (default: 'vote_score')
+ * @param {string} sortOrder - Sort order ('asc' or 'desc', default: 'desc')
  * @returns {Promise} - Promise containing list of public routes
  */
-export const getPublicRoutes = async (page = 1, limit = 20) => {
+export const getPublicRoutes = async (page = 1, limit = 20, sortBy = 'vote_score', sortOrder = 'desc') => {
   try {
-    const response = await api.get(`/routes/public?page=${page}&limit=${limit}`);
+    const response = await api.get(`/routes/public?page=${page}&limit=${limit}&sort_by=${sortBy}&sort_order=${sortOrder}`);
     return response.data;
   } catch (error) {
     throw error.response?.data || { success: false, message: 'Failed to get public routes' };

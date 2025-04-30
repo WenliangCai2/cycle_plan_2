@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { List, Avatar, Form, Button, Input, Rate, Card, message, Pagination, Tooltip, Popconfirm } from 'antd';
 import { UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import { createReview, getReviews, deleteReview } from '../api/reviewApi';
+import { getUsernameById } from '../api/userApi';
 
 const { TextArea } = Input;
 
 /**
  * Review editor component
  */
-const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRating }) => (
+const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRating, username }) => (
   <div>
     <Form.Item>
       <Rate 
@@ -57,6 +58,8 @@ const RouteReviews = ({ routeId, currentUserId }) => {
   });
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [usernames, setUsernames] = useState({}); // Map of user IDs to usernames
+  const currentUsername = localStorage.getItem('username') || 'You';
 
   // Get reviews list
   const fetchReviews = async (page = 1) => {
@@ -74,12 +77,65 @@ const RouteReviews = ({ routeId, currentUserId }) => {
           current: page,
           total: response.reviews.length // Need to set based on API response total
         });
+        
+        // Collect unique user IDs from reviews
+        const userIds = [...new Set(response.reviews.map(review => review.user_id))];
+        
+        // Fetch usernames for all user IDs if they're not already loaded
+        userIds.forEach(async (userId) => {
+          if (!usernames[userId]) {
+            try {
+              // Here we would ideally call an API endpoint to get username by ID
+              // For now, we'll use the current username if the ID matches
+              if (userId === currentUserId) {
+                setUsernames(prev => ({
+                  ...prev,
+                  [userId]: currentUsername
+                }));
+              } else {
+                // Try to get username from local storage if possible (for testing)
+                const fetchedUsername = await fetchUsernameById(userId);
+                setUsernames(prev => ({
+                  ...prev,
+                  [userId]: fetchedUsername || userId
+                }));
+              }
+            } catch (error) {
+              console.error(`Failed to get username for ${userId}:`, error);
+              // Fallback to showing user ID
+              setUsernames(prev => ({
+                ...prev,
+                [userId]: userId
+              }));
+            }
+          }
+        });
       }
     } catch (error) {
       message.error('Failed to get comments');
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // This is a placeholder function - in a real app, you would call an API
+  const fetchUsernameById = async (userId) => {
+    // For now, just return the current username if the ID matches
+    if (userId === currentUserId) {
+      return currentUsername;
+    }
+    
+    try {
+      // If you have a real API endpoint, call it here
+      // const response = await getUsernameById(userId);
+      // return response.username;
+      
+      // For now, just return "User" + first 6 chars of ID
+      return `User ${userId.substring(0, 6)}`;
+    } catch (error) {
+      console.error(`Failed to get username for ${userId}:`, error);
+      return userId;
     }
   };
 
@@ -181,6 +237,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
             <div style={{ display: 'flex', alignItems: 'flex-start' }}>
               <Avatar icon={<UserOutlined />} style={{ marginRight: '10px', marginTop: '5px' }} />
               <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{currentUsername}</div>
                 <ReviewEditor
                   onChange={handleContentChange}
                   onSubmit={handleSubmit}
@@ -188,6 +245,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
                   content={content}
                   rating={rating}
                   setRating={setRating}
+                  username={currentUsername}
                 />
               </div>
             </div>
@@ -205,7 +263,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
                   avatar={<Avatar icon={<UserOutlined />} />}
                   title={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{item.user_id}</span>
+                      <span>{item.username || usernames[item.user_id] || item.user_id}</span>
                       <span>
                         {formatDate(item.created_at)}
                         {currentUserId === item.user_id && (

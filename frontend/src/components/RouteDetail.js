@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Button, message, Spin, Row, Col, Divider, Tag, Rate } from 'antd';
-import { ArrowLeftOutlined, ShareAltOutlined, EnvironmentOutlined, GlobalOutlined, LockOutlined } from '@ant-design/icons';
+import { Card, Button, message, Spin, Row, Col, Divider, Tag, Rate, Popconfirm } from 'antd';
+import { ArrowLeftOutlined, ShareAltOutlined, EnvironmentOutlined, GlobalOutlined, LockOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getRouteById } from '../api/routeApi';
 import { getRouteVotes } from '../api/voteApi';
 import ShareRoute from './ShareRoute';
@@ -69,6 +69,52 @@ const RouteDetail = () => {
       setLocationLoading(false);
     }
   }, []);
+  
+  // Handle route deletion
+  const handleDeleteRoute = async () => {
+    if (!routeId || !isAuthenticated) {
+      message.error('Cannot delete route. Please check if you are logged in.');
+      return;
+    }
+
+    try {
+      // Get token for authentication
+      const token = localStorage.getItem('token');
+      
+      // Use direct fetch API
+      const response = await fetch(
+        `http://localhost:5000/api/routes/${routeId}`, 
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': token || '',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success) {
+          message.success('Route deleted successfully');
+          // Navigate back to home page
+          navigate('/');
+        } else {
+          message.error(`Delete failed: ${data.message || 'Unknown error'}`);
+        }
+      } else {
+        if (response.status === 403) {
+          message.error('You can only delete your own routes');
+        } else {
+          message.error(`Server error: ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting route:', error);
+      message.error('Failed to delete route');
+    }
+  };
   
   // Get voting statistics
   const fetchVoteStats = async () => {
@@ -168,13 +214,33 @@ const RouteDetail = () => {
 
   return (
     <div className="route-detail">
-      <Button 
-        icon={<ArrowLeftOutlined />} 
-        onClick={goBack}
-        style={{ marginBottom: '20px' }}
-      >
-        Back
-      </Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <Button 
+          icon={<ArrowLeftOutlined />} 
+          onClick={goBack}
+        >
+          Back
+        </Button>
+        
+        {isOwner && (
+          <Popconfirm
+            title="Delete Route"
+            description="Are you sure you want to delete this route? This action cannot be undone."
+            onConfirm={handleDeleteRoute}
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button 
+              type="primary" 
+              danger
+              icon={<DeleteOutlined />}
+            >
+              Delete Route
+            </Button>
+          </Popconfirm>
+        )}
+      </div>
       
       <Card
         title={
@@ -189,7 +255,8 @@ const RouteDetail = () => {
       >
         {/* Added voting widget - only visible for public routes */}
         {route.is_public && (
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ marginBottom: '20px', padding: '10px', background: '#f5f5f5', borderRadius: '8px' }}>
+            <h3>Vote for this route</h3>
             <RouteVote routeId={routeId} isAuthenticated={isAuthenticated} onVoteChange={handleVoteChange} />
           </div>
         )}

@@ -37,12 +37,14 @@ try:
     import models.route as route_model
     import models.review as review_model
     import models.poi as poi_model
+    import models.vote as vote_model
     
     user_model.db = db
     point_model.db = db
     route_model.db = db
     review_model.db = db
     poi_model.db = db
+    vote_model.db = db
 
     
     # Import and register route blueprints
@@ -51,12 +53,20 @@ try:
     from routes.route_routes import route_bp
     from routes.review_routes import review_bp
     from routes.poi_routes import poi_bp
+    from routes.vote_routes import vote_bp
+    from routes.user_routes import user_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(custom_point_bp)
     app.register_blueprint(route_bp)
     app.register_blueprint(review_bp)
     app.register_blueprint(poi_bp)
+    app.register_blueprint(vote_bp)
+    app.register_blueprint(user_bp)
+    
+    # Initialize vote routes
+    from routes.vote_routes import init_routes as init_vote_routes
+    init_vote_routes(db)
     
     print("MongoDB mode: Enabled")
     

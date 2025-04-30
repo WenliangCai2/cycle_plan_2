@@ -15,9 +15,10 @@ class Review:
         self.rating = rating  # 1-5 星级评分
         self.review_id = review_id or str(uuid.uuid4())
         self.created_at = datetime.now()
+        self.username = None  # Add username field
     
     def to_dict(self):
-        return {
+        result = {
             'review_id': self.review_id,
             'route_id': self.route_id,
             'user_id': self.user_id,
@@ -25,6 +26,12 @@ class Review:
             'rating': self.rating,
             'created_at': self.created_at
         }
+        
+        # Include username if available
+        if hasattr(self, 'username') and self.username:
+            result['username'] = self.username
+        
+        return result
     
     @staticmethod
     def from_dict(review_dict):
@@ -88,11 +95,26 @@ class Review:
         if db is None:
             return []
         
+        # Get reviews for the route
         review_dicts = db.reviews.find(
             {'route_id': route_id}
         ).sort('created_at', -1).skip(skip).limit(limit)
         
-        return [Review.from_dict(review_dict) for review_dict in review_dicts]
+        reviews = []
+        for review_dict in review_dicts:
+            review = Review.from_dict(review_dict)
+            
+            # Try to get the user's username
+            user_dict = db.users.find_one({'user_id': review.user_id})
+            if user_dict:
+                # Add username to the review object
+                review.username = user_dict.get('username', review.user_id)
+            else:
+                review.username = review.user_id
+            
+            reviews.append(review)
+        
+        return reviews
     
     @staticmethod
     def delete_review(review_id, user_id):

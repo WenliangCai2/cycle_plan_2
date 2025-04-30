@@ -4,7 +4,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -61,17 +61,13 @@ export const createCustomPoint = async (point) => {
 };
 
 /**
- * Delete a custom point
- * @param {string} pointId - Point ID
- * @returns {Promise} - Promise containing deletion result
+ * This function is no longer used - the delete operation is handled directly in the RestaurantList component
+ * using fetch API for better reliability.
  */
 export const deleteCustomPoint = async (pointId) => {
-  try {
-    const response = await api.delete(`/custom-points/${pointId}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { success: false, message: 'Failed to delete custom point' };
-  }
+  console.log(`This function is deprecated and should not be called.`);
+  console.log(`The deletion is now handled directly in the RestaurantList component.`);
+  return { success: false, message: 'This function is deprecated' };
 };
 
 export default {
