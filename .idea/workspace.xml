@@ -4,12 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="902f7f31-e2f5-4185-a48a-47af38b8aecd" name="更改" comment="update the front-end display function">
+    <list default="true" id="902f7f31-e2f5-4185-a48a-47af38b8aecd" name="更改" comment="Improve the existing functions">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Header.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Header.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/PublicRoutesList.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/PublicRoutesList.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/RouteCard.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/RouteCard.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +61,7 @@
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/caiwenliang/PycharmProjects/4.27-React-Flask-demo3/React-Flask-demo2&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/caiwenliang/Desktop/Course/courseWork/8016/NCL_CSC8016-main&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -74,7 +70,7 @@
     &quot;project.structure.last.edited&quot;: &quot;项目&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.language.and.region&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;,
     &quot;ts.external.directory.path&quot;: &quot;E:\\IntelliJ IDEA 2024.2.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -151,6 +147,17 @@
       <workItem from="1745831357251" duration="2661000" />
       <workItem from="1745835181806" duration="1777000" />
       <workItem from="1745847350390" duration="87000" />
+      <workItem from="1745930786260" duration="17000" />
+      <workItem from="1745930804603" duration="26000" />
+      <workItem from="1745930851099" duration="7000" />
+      <workItem from="1745930883572" duration="708000" />
+      <workItem from="1745931638973" duration="124000" />
+      <workItem from="1745931951970" duration="22000" />
+      <workItem from="1745934781254" duration="11000" />
+      <workItem from="1746012803698" duration="2599000" />
+      <workItem from="1746015789969" duration="3000" />
+      <workItem from="1746016576190" duration="420000" />
+      <workItem from="1746026828196" duration="695000" />
     </task>
     <task id="LOCAL-00001" summary="test">
       <option name="closed" value="true" />
@@ -184,7 +191,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745827422185</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Improve the existing functions">
+      <option name="closed" value="true" />
+      <created>1746027314699</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1746027314699</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -222,21 +237,12 @@
     <MESSAGE value="test2" />
     <MESSAGE value="test3" />
     <MESSAGE value="test4" />
-    <option name="LAST_COMMIT_MESSAGE" value="test4" />
+    <MESSAGE value="Improve the existing functions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improve the existing functions" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/backend/controllers/auth_controller.py</url>
-          <line>3</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/backend/routes/auth_routes.py</url>
-          <line>3</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/frontend/src/LoginForm.js</url>
           <option name="timeStamp" value="4" />

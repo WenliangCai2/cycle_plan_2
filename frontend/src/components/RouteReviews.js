@@ -85,19 +85,17 @@ const RouteReviews = ({ routeId, currentUserId }) => {
         userIds.forEach(async (userId) => {
           if (!usernames[userId]) {
             try {
-              // Here we would ideally call an API endpoint to get username by ID
-              // For now, we'll use the current username if the ID matches
               if (userId === currentUserId) {
                 setUsernames(prev => ({
                   ...prev,
                   [userId]: currentUsername
                 }));
               } else {
-                // Try to get username from local storage if possible (for testing)
-                const fetchedUsername = await fetchUsernameById(userId);
+
+                const response = await getUsernameById(userId);
                 setUsernames(prev => ({
                   ...prev,
-                  [userId]: fetchedUsername || userId
+                  [userId]: response.username || userId
                 }));
               }
             } catch (error) {
@@ -116,26 +114,6 @@ const RouteReviews = ({ routeId, currentUserId }) => {
       console.error(error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // This is a placeholder function - in a real app, you would call an API
-  const fetchUsernameById = async (userId) => {
-    // For now, just return the current username if the ID matches
-    if (userId === currentUserId) {
-      return currentUsername;
-    }
-    
-    try {
-      // If you have a real API endpoint, call it here
-      // const response = await getUsernameById(userId);
-      // return response.username;
-      
-      // For now, just return "User" + first 6 chars of ID
-      return `User ${userId.substring(0, 6)}`;
-    } catch (error) {
-      console.error(`Failed to get username for ${userId}:`, error);
-      return userId;
     }
   };
 
