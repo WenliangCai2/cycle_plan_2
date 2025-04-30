@@ -36,30 +36,27 @@ try:
     import models.custom_point as point_model
     import models.route as route_model
     import models.review as review_model
-    import models.vote as vote_model
-
-
+    import models.poi as poi_model
+    
     user_model.db = db
     point_model.db = db
     route_model.db = db
     review_model.db = db
-    vote_model.db = db
-    
+    poi_model.db = db
+
     
     # Import and register route blueprints
     from routes.auth_routes import auth_bp
     from routes.custom_point_routes import custom_point_bp
     from routes.route_routes import route_bp
     from routes.review_routes import review_bp
-    from routes.vote_routes import vote_bp, init_routes
-
-    init_routes(db)
+    from routes.poi_routes import poi_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(custom_point_bp)
     app.register_blueprint(route_bp)
     app.register_blueprint(review_bp)
-    app.register_blueprint(vote_bp)
+    app.register_blueprint(poi_bp)
     
     print("MongoDB mode: Enabled")
     
@@ -70,7 +67,7 @@ except Exception as e:
     def database_error(path):
         return jsonify({
             'success': False,
-            'message': 'Database connection failed, please try again later!'
+            'message': '数据库连接失败，请稍后再试'
         }), 503
 
 # Common time interface
@@ -87,4 +84,4 @@ def get_time():
 # Only execute when running this file directly
 if __name__ == '__main__':
     # Start application
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
