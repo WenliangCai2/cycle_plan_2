@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Tooltip, message } from 'antd';
-import { LikeOutlined, LikeFilled, DislikeOutlined, DislikeFilled } from '@ant-design/icons';
 import { createOrUpdateVote, getRouteVotes } from '../api/voteApi';
 import { useNavigate } from 'react-router-dom';
-import './RouteVote.css';
+
+// Material UI imports
+import { 
+  Button, 
+  Box,
+  Typography,
+  Tooltip,
+  Snackbar,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+
+import {
+  ThumbUp,
+  ThumbUpOutlined,
+  ThumbDown,
+  ThumbDownOutlined
+} from '@mui/icons-material';
 
 /**
  * RouteVote Component - Allows users to upvote or downvote a route
@@ -18,6 +33,12 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
   const [voteScore, setVoteScore] = useState(0);
   const [userVote, setUserVote] = useState(null); // null = not voted, 1 = upvote, -1 = downvote
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+  
   const navigate = useNavigate();
 
   // Fetch votes on component mount
@@ -49,10 +70,22 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
     }
   };
 
+  const handleSnackbarClose = () => {
+    setSnackbar({...snackbar, open: false});
+  };
+  
+  const showMessage = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+  };
+
   // Update the UI immediately and then send the request
   const handleVoteWithOptimisticUI = async (voteType) => {
     if (!isAuthenticated) {
-      message.warning('Please login to vote');
+      showMessage('Please login to vote', 'warning');
       navigate('/login');
       return;
     }
@@ -112,9 +145,9 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
     
     // Display a temporary success message
     if (userVote === voteType) {
-      message.success('The vote has been cancelled');
+      showMessage('The vote has been cancelled');
     } else {
-      message.success(voteType === 1 ? 'Liked' : 'Disliked');
+      showMessage(voteType === 1 ? 'Liked' : 'Disliked');
     }
     
     // Send a request to the server
@@ -148,7 +181,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
         setDownvotes(previousState.downvotes);
         setVoteScore(previousState.voteScore);
         setUserVote(previousState.userVote);
-        message.error('Voting failed, please try again later');
+        showMessage('Voting failed, please try again later', 'error');
       }
     } catch (error) {
       console.error('Vote error:', error);
@@ -157,41 +190,97 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       setDownvotes(previousState.downvotes);
       setVoteScore(previousState.voteScore);
       setUserVote(previousState.userVote);
-      message.error(error.message || 'Voting failed, please try again later');
+      showMessage(error.message || 'Voting failed, please try again later', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="route-vote">
-      <Space>
-        <Button
-          type="text"
-          icon={userVote === 1 ? <LikeFilled /> : <LikeOutlined />}
-          onClick={() => handleVoteWithOptimisticUI(1)}
-          loading={loading}
-          className={userVote === 1 ? 'active upvote' : 'upvote'}
-        />
-        <span className="vote-count upvote-count">{upvotes}</span>
-
-         {/* If it is liked, the text will be displayed. */}
-        {userVote === 1 && <span className="vote-status upvote-status">Liked</span>}
-
-        <div className="vote-divider"></div>
-        
-        <Button
-          type="text"
-          icon={userVote === -1 ? <DislikeFilled /> : <DislikeOutlined />}
-          onClick={() => handleVoteWithOptimisticUI(-1)}
-          loading={loading}
-          className={userVote === -1 ? 'active downvote' : 'downvote'}
-        />
-        <span className="vote-count downvote-count">{downvotes}</span>
-        {/* If it is disliked, the text will be displayed.*/}
-        {userVote === -1 && <span className="vote-status downvote-status">Disliked</span>}
-      </Space>
-    </div>
+    <Box 
+      sx={{ 
+        display: 'flex',
+        alignItems: 'center'
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Tooltip title={userVote === 1 ? "Remove like" : "Like"}>
+          <Button
+            color={userVote === 1 ? "primary" : "default"}
+            variant={userVote === 1 ? "contained" : "outlined"}
+            size="small"
+            sx={{ 
+              minWidth: '36px',
+              borderRadius: '20px 0 0 20px'
+            }}
+            onClick={() => handleVoteWithOptimisticUI(1)}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} /> : null}
+          >
+            {userVote === 1 ? <ThumbUp fontSize="small" /> : <ThumbUpOutlined fontSize="small" />}
+          </Button>
+        </Tooltip>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            minWidth: '24px', 
+            textAlign: 'center',
+            fontWeight: userVote === 1 ? 'bold' : 'normal',
+            color: userVote === 1 ? 'primary.main' : 'text.secondary' 
+          }}
+        >
+          {upvotes}
+        </Typography>
+      </Box>
+      
+      <Box sx={{ mx: 1, height: '20px', borderRight: '1px solid #ddd' }} />
+      
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Tooltip title={userVote === -1 ? "Remove dislike" : "Dislike"}>
+          <Button
+            color={userVote === -1 ? "error" : "default"}
+            variant={userVote === -1 ? "contained" : "outlined"}
+            size="small"
+            sx={{ 
+              minWidth: '36px',
+              borderRadius: '0 20px 20px 0'
+            }}
+            onClick={() => handleVoteWithOptimisticUI(-1)}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} /> : null}
+          >
+            {userVote === -1 ? <ThumbDown fontSize="small" /> : <ThumbDownOutlined fontSize="small" />}
+          </Button>
+        </Tooltip>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            minWidth: '24px', 
+            textAlign: 'center',
+            fontWeight: userVote === -1 ? 'bold' : 'normal',
+            color: userVote === -1 ? 'error.main' : 'text.secondary' 
+          }}
+        >
+          {downvotes}
+        </Typography>
+      </Box>
+      
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity} 
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

@@ -1,10 +1,40 @@
 import React, { useState } from 'react';
-import { Button, Modal, Tooltip, message, Space, Switch } from 'antd';
-import { FacebookOutlined, TwitterOutlined, WhatsAppOutlined, ShareAltOutlined, CopyOutlined, GlobalOutlined, LockOutlined } from '@ant-design/icons';
 import { shareRoute, updateRouteVisibility } from '../api/routeApi';
 
+// Material UI imports
+import {
+  Button,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
+  Box,
+  Typography,
+  Switch,
+  FormControlLabel,
+  TextField,
+  Stack,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Grid
+} from '@mui/material';
+
+// Material UI icons
+import {
+  Share as ShareIcon,
+  PublicOutlined,
+  LockOutlined,
+  Facebook as FacebookIcon,
+  Twitter as TwitterIcon,
+  WhatsApp as WhatsAppIcon,
+  ContentCopy as ContentCopyIcon
+} from '@mui/icons-material';
+
 /**
- * Route sharing component
+ * Route sharing component with Material UI styling
  * @param {Object} props
  * @param {string} props.routeId - Route ID
  * @param {boolean} props.isPublic - Whether the route is public
@@ -15,6 +45,11 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
   const [shareLinks, setShareLinks] = useState(null);
   const [loading, setLoading] = useState(false);
   const [publicSwitch, setPublicSwitch] = useState(isPublic);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Open share modal
   const showModal = async () => {
@@ -26,7 +61,11 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
       setShareLinks(response.social_links);
       setIsModalOpen(true);
     } catch (error) {
-      message.error('Failed to get sharing links');
+      setSnackbar({
+        open: true,
+        message: 'Failed to get sharing links',
+        severity: 'error'
+      });
       console.error(error);
     } finally {
       setLoading(false);
@@ -34,8 +73,13 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
   };
 
   // Close share modal
-  const handleCancel = () => {
+  const handleModalClose = () => {
     setIsModalOpen(false);
+  };
+
+  // Close snackbar
+  const handleSnackbarClose = () => {
+    setSnackbar({...snackbar, open: false});
   };
 
   // Copy share link
@@ -44,16 +88,25 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
     
     navigator.clipboard.writeText(shareLinks.share_url)
       .then(() => {
-        message.success('Link copied to clipboard');
+        setSnackbar({
+          open: true,
+          message: 'Link copied to clipboard',
+          severity: 'success'
+        });
       })
       .catch(err => {
-        message.error('Failed to copy link');
+        setSnackbar({
+          open: true,
+          message: 'Failed to copy link',
+          severity: 'error'
+        });
         console.error(err);
       });
   };
 
   // Update route visibility
-  const handleVisibilityChange = async (checked) => {
+  const handleVisibilityChange = async (event) => {
+    const checked = event.target.checked;
     setLoading(true);
     
     try {
@@ -64,9 +117,17 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
         onVisibilityChange(checked);
       }
       
-      message.success(checked ? 'Route is now public' : 'Route is now private');
+      setSnackbar({
+        open: true,
+        message: checked ? 'Route is now public' : 'Route is now private',
+        severity: 'success'
+      });
     } catch (error) {
-      message.error('Failed to update route visibility');
+      setSnackbar({
+        open: true,
+        message: 'Failed to update route visibility',
+        severity: 'error'
+      });
       console.error(error);
       // Restore switch state
       setPublicSwitch(isPublic);
@@ -75,105 +136,196 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
     }
   };
 
+  const socialIconStyle = {
+    width: 40,
+    height: 40
+  };
+
   return (
     <>
-      <Space>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Tooltip title="Share Route">
           <Button 
-            type="primary" 
-            icon={<ShareAltOutlined />} 
+            variant="contained" 
+            startIcon={<ShareIcon />} 
             onClick={showModal}
-            loading={loading}
+            disabled={loading}
+            sx={{ mr: 1, borderRadius: '20px' }}
+            size="small"
           >
             Share
           </Button>
         </Tooltip>
         
-        <Tooltip title={publicSwitch ? "Public Route" : "Private Route"}>
-          <Switch
-            checkedChildren={<GlobalOutlined />}
-            unCheckedChildren={<LockOutlined />}
-            checked={publicSwitch}
-            onChange={handleVisibilityChange}
-            loading={loading}
-          />
-        </Tooltip>
-      </Space>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={publicSwitch}
+              onChange={handleVisibilityChange}
+              disabled={loading}
+              icon={<LockOutlined />}
+              checkedIcon={<PublicOutlined />}
+              color="primary"
+            />
+          }
+          label={
+            <Typography variant="body2">
+              {publicSwitch ? "Public" : "Private"}
+            </Typography>
+          }
+          sx={{ ml: 0 }}
+        />
+      </Box>
 
-      <Modal
-        title="Share Route"
+      <Dialog
         open={isModalOpen}
-        onCancel={handleCancel}
-        footer={null}
+        onClose={handleModalClose}
+        maxWidth="sm"
+        fullWidth
       >
-        {shareLinks && (
-          <div className="share-links">
-            <p>Choose a platform to share:</p>
-            <Space size="large">
-              <Tooltip title="Share to Facebook">
-                <a 
-                  href={shareLinks.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button 
-                    shape="circle" 
-                    icon={<FacebookOutlined />} 
-                    size="large"
-                    style={{ backgroundColor: '#3b5998', color: 'white' }}
-                  />
-                </a>
-              </Tooltip>
+        <DialogTitle>
+          Share Route
+        </DialogTitle>
+        
+        <DialogContent dividers>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : shareLinks && (
+            <>
+              <Typography variant="subtitle1" gutterBottom>
+                Choose a platform to share:
+              </Typography>
               
-              <Tooltip title="Share to Twitter">
-                <a 
-                  href={shareLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button 
-                    shape="circle" 
-                    icon={<TwitterOutlined />} 
-                    size="large"
-                    style={{ backgroundColor: '#1DA1F2', color: 'white' }}
-                  />
-                </a>
-              </Tooltip>
+              <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
+                <Grid item>
+                  <Tooltip title="Share to Facebook">
+                    <IconButton
+                      component="a"
+                      href={shareLinks.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ 
+                        ...socialIconStyle, 
+                        color: 'white', 
+                        bgcolor: '#3b5998',
+                        '&:hover': { bgcolor: '#324b80' } 
+                      }}
+                    >
+                      <FacebookIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+                
+                <Grid item>
+                  <Tooltip title="Share to Twitter">
+                    <IconButton
+                      component="a"
+                      href={shareLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ 
+                        ...socialIconStyle, 
+                        color: 'white', 
+                        bgcolor: '#1DA1F2',
+                        '&:hover': { bgcolor: '#0d8edc' } 
+                      }}
+                    >
+                      <TwitterIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+                
+                <Grid item>
+                  <Tooltip title="Share to WhatsApp">
+                    <IconButton
+                      component="a"
+                      href={shareLinks.whatsapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ 
+                        ...socialIconStyle, 
+                        color: 'white', 
+                        bgcolor: '#25D366',
+                        '&:hover': { bgcolor: '#1eb958' } 
+                      }}
+                    >
+                      <WhatsAppIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+                
+                <Grid item>
+                  <Tooltip title="Copy Link">
+                    <IconButton
+                      onClick={copyShareLink}
+                      sx={{ 
+                        ...socialIconStyle, 
+                        color: 'white', 
+                        bgcolor: '#607d8b',
+                        '&:hover': { bgcolor: '#4b636e' } 
+                      }}
+                    >
+                      <ContentCopyIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+              </Grid>
               
-              <Tooltip title="Share to WhatsApp">
-                <a 
-                  href={shareLinks.whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button 
-                    shape="circle" 
-                    icon={<WhatsAppOutlined />} 
-                    size="large"
-                    style={{ backgroundColor: '#25D366', color: 'white' }}
-                  />
-                </a>
-              </Tooltip>
+              <Typography variant="subtitle1" gutterBottom>
+                Share link:
+              </Typography>
               
-              <Tooltip title="Copy Link">
-                <Button 
-                  shape="circle" 
-                  icon={<CopyOutlined />} 
-                  size="large"
-                  onClick={copyShareLink}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mt: 1 
+              }}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  value={shareLinks.share_url}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  size="small"
                 />
-              </Tooltip>
-            </Space>
-            
-            <div style={{ marginTop: '20px' }}>
-              <p>Share link:</p>
-              <div className="share-url">
-                {shareLinks.share_url}
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={copyShareLink}
+                  sx={{ ml: 1, whiteSpace: 'nowrap' }}
+                >
+                  Copy
+                </Button>
+              </Box>
+            </>
+          )}
+        </DialogContent>
+        
+        <DialogActions>
+          <Button onClick={handleModalClose}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity} 
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

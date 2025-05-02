@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import H from '@here/maps-api-for-javascript';
+import { getCustomMarkerIcon } from './components/CustomMapMarker';
+import { createInfoBubbleContent } from './components/CustomInfoBubble';
+import './components/MapStyles.css';
+import { CircularProgress, Typography } from '@mui/material';
  
 const Map = (props) => {
     const mapRef = useRef(null);
@@ -94,46 +98,57 @@ const Map = (props) => {
     // Create a custom icon for POI based on category
     const createPOIIcon = (category) => {
         const iconColor = getCategoryColor(category);
-       
-        const svgMarkup = `<svg width="24" height="32" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 0C5.383 0 0 5.383 0 12c0 9.164 12 20 12 20s12-10.836 12-20c0-6.617-5.383-12-12-12z"
-                fill="${iconColor}" />
-            <circle cx="12" cy="12" r="5" fill="white" />
-        </svg>`;
-       
-        return new H.map.Icon(svgMarkup);
+        return getCustomMarkerIcon(H, iconColor, 'star', { size: 24 });
     };
  
-    // Show info bubble when POI is clicked
-    const showPOIInfoBubble = (poiData, position) => {
-        // Create content for the info bubble
-        const bubbleContent = document.createElement('div');
-        bubbleContent.className = 'poi-info-bubble';
-       
-        // Format rating stars
-        const rating = poiData.averageRating || 0;
-        const stars = "★".repeat(Math.floor(rating)) + "☆".repeat(5 - Math.floor(rating));
-       
-        bubbleContent.innerHTML = `
-            <h3>${poiData.title}</h3>
-            <p>${poiData.vicinity || 'No address available'}</p>
-            <p>Rating: ${stars} (${rating.toFixed(1)})</p>
-            <p>${poiData.category ? poiData.category.title : 'No category'}</p>
-            ${poiData.contacts && poiData.contacts.phone ?
-                `<p>Phone: ${poiData.contacts.phone[0].value}</p>` : ''}
-            ${poiData.openingHours ?
-                `<p>${poiData.openingHours.isOpen ? 'Open Now' : 'Closed'}</p>` : ''}
-            ${poiData.href ?
-                `<a href="${poiData.href}" target="_blank">More Information</a>` : ''}
-        `;
-       
-        // Create and show the info bubble
-        const infoBubble = new H.ui.InfoBubble(position, {
-            content: bubbleContent
-        });
-       
-        // Add the info bubble to the UI
-        ui.current.addBubble(infoBubble);
+    // Show info bubble for any marker when clicked
+    const showMarkerInfoBubble = (marker, position) => {
+        try {
+            console.log("Showing info bubble for marker");
+            // Get marker data
+            const markerData = marker.getData();
+            console.log("Marker data:", markerData);
+            
+            // Extract only the name, simplify data processing
+            let title = '';
+            
+            if (typeof markerData === 'string') {
+                // Simple string data
+                title = markerData;
+            } else if (markerData && typeof markerData === 'object') {
+                // Object data - extract name/title
+                title = markerData.name || markerData.title || 'Unnamed Location';
+            } else {
+                // Default value
+                title = 'Location Point';
+            }
+            
+            // Prepare only the name data
+            const bubbleData = { title: title };
+            
+            console.log("Creating simple info bubble with title:", title);
+            
+            // Create and show the bubble
+            const bubbleContent = createInfoBubbleContent(bubbleData);
+            
+            // Create info bubble - set small offset to position bubble closer to marker
+            const infoBubble = new H.ui.InfoBubble(position, {
+                content: bubbleContent,
+                // Set bubble offset to position it directly above the marker
+                offset: { x: 0, y: -5 }
+            });
+            
+            // Remove existing bubbles
+            ui.current.getBubbles().forEach(bubble => {
+                ui.current.removeBubble(bubble);
+            });
+            
+            // Add new bubble
+            ui.current.addBubble(infoBubble);
+            console.log("Simple info bubble added");
+        } catch (e) {
+            console.error("Error showing marker info bubble:", e);
+        }
     };
  
     // Add a marker for a POI on the map
@@ -145,23 +160,37 @@ const Map = (props) => {
             lng: poi.position[1]
         };
        
-        // Create marker
-        const poiMarker = new H.map.Marker(poiPosition, {
-            icon: createPOIIcon(poiCategory)
-        });
-       
-        // Add data to the marker
-        poiMarker.setData(poi);
-       
-        // Add tap/click event to show the POI info
-        poiMarker.addEventListener('tap', event => {
-            const poiData = event.target.getData();
-            showPOIInfoBubble(poiData, poiPosition);
-        });
-       
-        // Add to map and to our markers array
-        map.current.addObject(poiMarker);
-        setPoiMarkers(prevMarkers => [...prevMarkers, poiMarker]);
+        try {
+            console.log("Adding POI marker:", poi.title || poi.name);
+            // Create marker
+            const poiMarker = new H.map.Marker(poiPosition, {
+                icon: createPOIIcon(poiCategory)
+            });
+           
+            // Add data to the marker
+            poiMarker.setData(poi);
+           
+            // Add tap event to marker directly
+            poiMarker.addEventListener('tap', (evt) => {
+                try {
+                    const position = {
+                        lat: poiMarker.getGeometry().lat,
+                        lng: poiMarker.getGeometry().lng
+                    };
+                    // Use custom info bubble function
+                    showMarkerInfoBubble(poiMarker, position);
+                } catch (e) {
+                    console.error("Error showing POI info bubble:", e);
+                }
+            });
+           
+            // Add to map and to our markers array
+            map.current.addObject(poiMarker);
+            setPoiMarkers(prevMarkers => [...prevMarkers, poiMarker]);
+            console.log("POI marker added");
+        } catch (e) {
+            console.error("Error adding POI marker:", e);
+        }
     };
  
     // Search for POIs near a specific location
@@ -249,13 +278,33 @@ const Map = (props) => {
  
     // Get tag icon (from original implementation)
     function getMarkerIcon(color, size = 7) {
-        const svgCircle = `<svg width="20" height="20" version="1.1" xmlns="http://www.w3.org/2000/svg">
-                    <g id="marker">
-                    <circle cx="10" cy="10" r="${size}" fill="${color}" stroke="${color}" stroke-width="4" />
-                    </g></svg>`;
-        return new H.map.Icon(svgCircle, {
-            anchor: { x: 10, y: 10 }
-        });
+        // Use the new Material UI styled markers
+        let markerType = 'circular';
+        let markerSize = 24;
+        
+        // Choose marker type based on color role
+        switch(color) {
+            case 'red': // User location
+                markerType = 'pin';  // Changed from 'pulse' to 'pin' to match other locations
+                markerSize = 32;     // Use standard pin size instead of multiplier
+                break;
+            case 'green': // Destination
+                markerType = 'pin';
+                markerSize = 32;
+                break;
+            case 'blue': // Start/waypoints
+                markerType = 'pin';
+                markerSize = 28;
+                break;
+            case 'purple': // Custom points
+                markerType = 'star';
+                markerSize = 32;
+                break;
+            default:
+                markerType = 'circular';
+        }
+        
+        return getCustomMarkerIcon(H, color, markerType, { size: markerSize });
     }
  
     // Modified route calculation (from original implementation, with POI support added)
@@ -305,38 +354,107 @@ const Map = (props) => {
                 // Add route folds
                 map.addObject(newRoutePolyline);
  
+                console.log("Adding waypoint markers for route");
                 // Add markers for all waypoints
                 const markers = waypoints.map((point, index) => {
                     // Start point is blue, end point is green, intermediate points are blue
                     const color = index === 0 ? 'blue' : (index === waypoints.length - 1 ? 'green' : 'blue');
-                    const marker = new H.map.Marker(point, {
-                        icon: getMarkerIcon(color)
-                    });
-                   
-                    // Add custom data for the point (could be name if available)
-                    marker.setData(index === 0 ? "Start" : (index === waypoints.length - 1 ? "End" : `Stop ${index}`));
-                   
-                    return marker;
-                });
+                    
+                    try {
+                        // Create marker with the appropriate icon
+                        const marker = new H.map.Marker(point, {
+                            icon: getMarkerIcon(color)
+                        });
+                        
+                        // Add custom data for the point (could be name if available)
+                        const pointName = point.name || (index === 0 ? "起点" : (index === waypoints.length - 1 ? "终点" : `途经点 ${index}`));
+                        marker.setData({
+                            name: pointName,
+                            title: pointName,
+                            isWaypoint: true,
+                            waypointIndex: index
+                        });
+                        
+                        // Add tap event to marker
+                        marker.addEventListener('tap', (evt) => {
+                            const position = {
+                                lat: marker.getGeometry().lat,
+                                lng: marker.getGeometry().lng
+                            };
+                            showMarkerInfoBubble(marker, position);
+                        });
+                        
+                        return marker;
+                    } catch (e) {
+                        console.error("Error creating waypoint marker:", e);
+                        return null;
+                    }
+                }).filter(marker => marker !== null);
  
                 // Add all markers to the map
-                map.addObjects(markers);
+                if (markers.length > 0) {
+                    map.addObjects(markers);
+                    console.log("Added waypoint markers:", markers.length);
+                }
  
+                console.log("Adding user position marker in route calculation");
                 // Add user position marker with a custom icon and label
-                const userMarker = new H.map.Marker(userPosition, {
-                    icon: getMarkerIcon('red', 10) // Larger user location marker
-                });
-                userMarker.setData("Your Location");
-                map.addObject(userMarker);
+                try {
+                    const userMarker = new H.map.Marker(userPosition, {
+                        icon: getCustomMarkerIcon(H, 'red', 'pin', { 
+                            size: 32, 
+                            label: 'My Current Location' 
+                        })
+                    });
+                    userMarker.setData({
+                        name: "My Current Location",
+                        title: "My Current Location"
+                    });
+                    // Add tap event to user marker
+                    userMarker.addEventListener('tap', (evt) => {
+                        const position = {
+                            lat: userMarker.getGeometry().lat,
+                            lng: userMarker.getGeometry().lng
+                        };
+                        showMarkerInfoBubble(userMarker, position);
+                    });
+                    map.addObject(userMarker);
+                    console.log("User marker added in route calculation");
+                } catch (e) {
+                    console.error("Error adding user position marker in route calculation:", e);
+                }
  
+                console.log("Adding custom points in route calculation:", customPoints);
                 // Add custom points markers
                 if (customPoints && Array.isArray(customPoints)) {
                     customPoints.forEach(point => {
-                        const marker = new H.map.Marker(point.location, {
-                            icon: getMarkerIcon('purple') // Custom points
-                        });
-                        marker.setData(point.name || "Custom Point");
-                        map.addObject(marker);
+                        try {
+                            if (point && point.location && typeof point.location.lat === 'number' && typeof point.location.lng === 'number') {
+                                console.log("Adding custom point in route calculation:", point);
+                                const marker = new H.map.Marker(point.location, {
+                                    icon: getCustomMarkerIcon(H, '#9c27b0', 'pin', { 
+                                        size: 32, 
+                                        label: point.name || ''
+                                    })
+                                });
+                                // Set full point data including name
+                                marker.setData(point);
+                                // Add tap event to marker
+                                marker.addEventListener('tap', (evt) => {
+                                    const position = {
+                                        lat: marker.getGeometry().lat,
+                                        lng: marker.getGeometry().lng
+                                    };
+                                    showMarkerInfoBubble(marker, position);
+                                });
+                                map.addObject(marker);
+                                console.log("Custom point marker added in route calculation");
+                            } else {
+                                console.warn("Invalid custom point in route calculation:", point);
+                            }
+                        } catch (e) {
+                            console.error("Error adding custom point in route calculation:", e);
+                        }
                     });
                 }
  
@@ -400,24 +518,71 @@ const Map = (props) => {
         }
  
         // Clear all objects on the map
-        map.current?.removeObjects(map.current.getObjects());
- 
-        // Add user position marker with a custom icon and label
-        const userMarker = new H.map.Marker(userPosition, {
-            icon: getMarkerIcon('red', 10) // Larger user location marker
-        });
-        userMarker.setData("Your Location");
-        map.current?.addObject(userMarker);
- 
-        // Add custom points markers
-        if (customPoints && Array.isArray(customPoints)) {
-            customPoints.forEach(point => {
-                const marker = new H.map.Marker(point.location, {
-                    icon: getMarkerIcon('purple') // Custom points
+        if (map.current) {
+            map.current.removeObjects(map.current.getObjects());
+            
+            console.log("Adding user position marker");
+            // Add user position marker with a custom icon and label
+            if (userPosition) {
+                try {
+                    const userMarker = new H.map.Marker(userPosition, {
+                        icon: getCustomMarkerIcon(H, 'red', 'pin', { 
+                            size: 32, 
+                            label: 'My Current Location' 
+                        })
+                    });
+                    userMarker.setData({
+                        name: "My Current Location",
+                        title: "My Current Location"
+                    });
+                    // Add tap event to user marker
+                    userMarker.addEventListener('tap', (evt) => {
+                        const position = {
+                            lat: userMarker.getGeometry().lat,
+                            lng: userMarker.getGeometry().lng
+                        };
+                        showMarkerInfoBubble(userMarker, position);
+                    });
+                    map.current.addObject(userMarker);
+                    console.log("User marker added");
+                } catch (e) {
+                    console.error("Error adding user position marker:", e);
+                }
+            }
+            
+            console.log("Adding custom points", customPoints);
+            // Add custom points markers
+            if (customPoints && Array.isArray(customPoints) && customPoints.length > 0) {
+                customPoints.forEach(point => {
+                    try {
+                        if (point && point.location && typeof point.location.lat === 'number' && typeof point.location.lng === 'number') {
+                            console.log("Adding custom point:", point);
+                            const marker = new H.map.Marker(point.location, {
+                                icon: getCustomMarkerIcon(H, '#9c27b0', 'pin', { 
+                                    size: 32, 
+                                    label: point.name || '' 
+                                })
+                            });
+                            // Set full point data including name
+                            marker.setData(point);
+                            // Add tap event to marker
+                            marker.addEventListener('tap', (evt) => {
+                                const position = {
+                                    lat: marker.getGeometry().lat,
+                                    lng: marker.getGeometry().lng
+                                };
+                                showMarkerInfoBubble(marker, position);
+                            });
+                            map.current.addObject(marker);
+                            console.log("Custom point marker added");
+                        } else {
+                            console.warn("Invalid point or location:", point);
+                        }
+                    } catch (e) {
+                        console.error("Error adding custom point:", e);
+                    }
                 });
-                marker.setData(point.name || "Custom Point");
-                map.current?.addObject(marker);
-            });
+            }
         }
  
         // Calculate route only if there are 2 or more selected locations
@@ -433,6 +598,23 @@ const Map = (props) => {
             const marker = new H.map.Marker(selectedLocations[0], {
                 icon: getMarkerIcon('green')
             });
+            
+            // Set marker data with location name if available
+            const locationName = selectedLocations[0].name || "Selected Location";
+            marker.setData({
+                name: locationName,
+                title: locationName
+            });
+            
+            // Add tap event to marker
+            marker.addEventListener('tap', (evt) => {
+                const position = {
+                    lat: marker.getGeometry().lat,
+                    lng: marker.getGeometry().lng
+                };
+                showMarkerInfoBubble(marker, position);
+            });
+            
             map.current?.addObject(marker);
         }
  
@@ -446,21 +628,13 @@ const Map = (props) => {
     }, [apikey, userPosition, selectedLocations, customPoints, onMapClick, restaurantList, loading]);
  
     return (
-        <div style={{ width: '100%', height: '500px', position: 'relative' }} ref={mapRef}>
+        <div className="map-container" ref={mapRef}>
             {loading && (
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div>Getting your location...</div>
+                <div className="loading-overlay">
+                    <div className="loading-spinner">
+                        <CircularProgress color="primary" />
+                        <Typography className="loading-text">Getting your location...</Typography>
+                    </div>
                 </div>
             )}
         </div>

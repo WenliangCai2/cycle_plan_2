@@ -143,15 +143,6 @@ const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPer
                     {point.isCurrentLocation ? 'Current location' : (point.isCustom ? 'Custom point' : 'POI')}
                   </Typography>
                 </Box>
-                
-                <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
-                  {point.isCustom && (
-                    <Chip size="small" color="primary" label="Custom" />
-                  )}
-                  {point.isCurrentLocation && (
-                    <Chip size="small" color="secondary" label="Current" />
-                  )}
-                </Box>
               </ListItem>
             </React.Fragment>
           ))}

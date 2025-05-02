@@ -1,0 +1,157 @@
+/* Styles for the map container */
+.map-container {
+  width: 100%;
+  height: 500px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Custom marker animation */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pulse-marker {
+  animation: pulse 2s infinite;
+}
+
+/* Custom marker hover effect */
+.H_marker:hover {
+  cursor: pointer;
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* POI control panel styling */
+.poi-control-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: 250px;
+}
+
+.poi-controls h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #444;
+}
+
+.poi-controls label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.poi-controls input[type="range"] {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.poi-controls select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  margin-bottom: 15px;
+  background-color: white;
+}
+
+.poi-controls button {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.poi-controls button:hover {
+  background-color: #303f9f;
+}
+
+/* Info bubble customization */
+.H_ib {
+  min-width: auto !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.H_ib_body {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.H_ib_content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.H_ib_close {
+  display: none !important; /* Hide close button */
+}
+
+/* Click anywhere to close bubble */
+.H_ib_notailbg {
+  display: none !important;
+}
+
+.H_ib_tail {
+  display: none !important; /* Hide default bubble tail */
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.loading-text {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #3f51b5;
+} 
