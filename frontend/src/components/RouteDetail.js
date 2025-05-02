@@ -6,6 +6,8 @@ import ShareRoute from './ShareRoute';
 import RouteReviews from './RouteReviews';
 import RouteVote from './RouteVote';
 import Map from '../Map';
+// 导入背景图片
+import backgroundImage from '../images/AdobeStock_1092964965_Preview.jpeg';
 
 // Material UI imports
 import {
@@ -238,7 +240,9 @@ const RouteDetail = () => {
   };
 
   const backgroundStyle = {
-    backgroundImage: 'url(/images/cycling-background.jpg)',
+    backgroundImage: route && route.image_url ? 
+      `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${route.image_url})` : 
+      `url(${backgroundImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed',
@@ -248,10 +252,30 @@ const RouteDetail = () => {
   };
 
   const overlayStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: '12px',
     padding: '30px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(5px)'
+  };
+
+  const cardStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+    backdropFilter: 'blur(5px)'
+  };
+
+  const sectionStyle = {
+    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+    borderRadius: '8px',
+    padding: '16px',
+    backdropFilter: 'blur(5px)'
+  };
+
+  const buttonStyle = {
+    backdropFilter: 'blur(5px)',
+    borderRadius: '20px'
   };
 
   if (loading || locationLoading) {
@@ -262,7 +286,7 @@ const RouteDetail = () => {
       >
         <Box sx={{ textAlign: 'center' }}>
           <CircularProgress color="inherit" sx={{ mb: 2 }} />
-          <Typography variant="h6" color="white">
+          <Typography variant="h6" color="black">
             {locationLoading ? 'Getting your location...' : 'Loading route details...'}
           </Typography>
         </Box>
@@ -306,7 +330,7 @@ const RouteDetail = () => {
               variant="outlined"
               startIcon={<ArrowBackIcon />}
               onClick={goBack}
-              sx={{ borderRadius: '20px' }}
+              sx={{ ...buttonStyle, color: 'black', borderColor: 'rgba(0, 0, 0, 0.5)' }}
             >
               Back
             </Button>
@@ -314,7 +338,7 @@ const RouteDetail = () => {
             <Typography variant="h4" component="h1" fontWeight="bold" sx={{ 
               display: 'flex', 
               alignItems: 'center',
-              color: '#2e7d32'
+              color: 'black'
             }}>
               <DirectionsBike sx={{ mr: 1 }} /> Route Details
             </Typography>
@@ -325,7 +349,7 @@ const RouteDetail = () => {
                 color="error"
                 startIcon={<DeleteIcon />}
                 onClick={openDeleteDialog}
-                sx={{ borderRadius: '20px' }}
+                sx={{ ...buttonStyle }}
               >
                 Delete Route
               </Button>
@@ -334,12 +358,11 @@ const RouteDetail = () => {
           
           <Card sx={{ 
             mb: 4, 
-            borderRadius: '12px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+            ...cardStyle
           }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" component="h2" fontWeight="bold">
+                <Typography variant="h5" component="h2" fontWeight="bold" color="black">
                   {route.name}
                 </Typography>
                 
@@ -364,157 +387,161 @@ const RouteDetail = () => {
                 </Box>
               </Box>
               
-              {/* Map Section */}
+              {/* 修改布局: 将地图和统计数据放在水平Flex容器中 */}
               <Box sx={{ 
-                height: '400px', 
-                mb: 3, 
-                borderRadius: '8px', 
-                overflow: 'hidden',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+                display: 'flex', 
+                flexDirection: { xs: 'column', md: 'row' }, 
+                gap: 3,
+                mb: 3
               }}>
-                {route.locations && Array.isArray(route.locations) && route.locations.length > 0 ? (
-                  <Map 
-                    apikey={apikey} 
-                    locations={route.locations} 
-                    userPosition={userPosition}
-                    selectedLocations={route.locations || []}
-                    restaurantList={[]}
-                    customPoints={[]}
-                    loading={locationLoading}
-                  />
-                ) : (
+                {/* Map Section - 左侧占据更多空间 */}
+                <Box sx={{ 
+                  height: '400px', 
+                  borderRadius: '8px', 
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                  flexGrow: 1,
+                  width: { xs: '100%', md: '70%' }
+                }}>
+                  {route.locations && Array.isArray(route.locations) && route.locations.length > 0 ? (
+                    <Map 
+                      apikey={apikey} 
+                      locations={route.locations} 
+                      userPosition={userPosition}
+                      selectedLocations={route.locations || []}
+                      restaurantList={[]}
+                      customPoints={[]}
+                      loading={locationLoading}
+                    />
+                  ) : (
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      height: '100%',
+                      bgcolor: 'rgba(0, 0, 0, 0.03)'
+                    }}>
+                      <Typography color="text.secondary">
+                        Cannot display route map - missing location data
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+                
+                {/* Stats Section - 右侧 */}
+                <Box sx={{ 
+                  width: { xs: '100%', md: '30%' },
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  {/* Route Statistics */}
                   <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
+                    ...sectionStyle, 
                     height: '100%',
-                    bgcolor: 'rgba(0, 0, 0, 0.03)'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    mb: 2
                   }}>
-                    <Typography color="text.secondary">
-                      Cannot display route map - missing location data
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-              
-              {/* Stats Section */}
-              <Grid container spacing={3} sx={{ mb: 2 }}>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ borderRadius: '8px', p: 3, bgcolor: 'rgba(46, 125, 50, 0.05)' }}>
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                    <Typography variant="h6" gutterBottom fontWeight="bold" color="black">
                       Route Statistics
                     </Typography>
                     
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          mb: 2
-                        }}>
-                          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                            <ShareIcon />
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              Shares
-                            </Typography>
-                            <Typography variant="h6">
-                              {route.share_count || 0}
-                            </Typography>
-                          </Box>
+                    {/* 竖向排列的统计信息 */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center'
+                      }}>
+                        <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+                          <ShareIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" color="black" sx={{ opacity: 0.7 }}>
+                            Shares
+                          </Typography>
+                          <Typography variant="h6" color="black">
+                            {route.share_count || 0}
+                          </Typography>
                         </Box>
-                      </Grid>
+                      </Box>
                       
-                      <Grid item xs={12} sm={6}>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          mb: 2
-                        }}>
-                          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                            <ThumbUp />
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              Votes
-                            </Typography>
-                            <Typography variant="h6">
-                              {voteStats.upvotes} upvotes, {voteStats.downvotes} downvotes
-                            </Typography>
-                          </Box>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center'
+                      }}>
+                        <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+                          <ThumbUp />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" color="black" sx={{ opacity: 0.7 }}>
+                            Votes
+                          </Typography>
+                          <Typography variant="h6" color="black">
+                            {voteStats.upvotes} upvotes, {voteStats.downvotes} downvotes
+                          </Typography>
                         </Box>
-                      </Grid>
+                      </Box>
                       
                       {route.avg_rating > 0 && (
-                        <Grid item xs={12} sm={6}>
-                          <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center',
-                            mb: 2
-                          }}>
-                            <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                              <CommentIcon />
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">
-                                Rating
-                              </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Rating 
-                                  value={route.avg_rating} 
-                                  precision={0.5} 
-                                  readOnly 
-                                  size="small" 
-                                />
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                                  ({route.review_count || 0} reviews)
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </Box>
-                        </Grid>
-                      )}
-                      
-                      <Grid item xs={12} sm={6}>
                         <Box sx={{ 
                           display: 'flex', 
-                          alignItems: 'center',
-                          mb: 2
+                          alignItems: 'center'
                         }}>
                           <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                            <DirectionsBike />
+                            <CommentIcon />
                           </Avatar>
                           <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              Created
+                            <Typography variant="body2" color="black" sx={{ opacity: 0.7 }}>
+                              Rating
                             </Typography>
-                            <Typography variant="body1">
-                              {new Date(route.created_at).toLocaleString()}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Rating 
+                                value={route.avg_rating} 
+                                precision={0.5} 
+                                readOnly 
+                                size="small" 
+                              />
+                              <Typography variant="body2" color="black" sx={{ opacity: 0.7, ml: 1 }}>
+                                ({route.review_count || 0} reviews)
+                              </Typography>
+                            </Box>
                           </Box>
                         </Box>
-                      </Grid>
-                    </Grid>
+                      )}
+                      
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center'
+                      }}>
+                        <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+                          <DirectionsBike />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" color="black" sx={{ opacity: 0.7 }}>
+                            Created
+                          </Typography>
+                          <Typography variant="body1" color="black">
+                            {new Date(route.created_at).toLocaleString()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
                   </Box>
-                </Grid>
-                
-                {route.is_public && (
-                  <Grid item xs={12} md={6}>
+                  
+                  {/* Vote Section */}
+                  {route.is_public && (
                     <Box sx={{ 
-                      borderRadius: '8px', 
-                      p: 3, 
-                      bgcolor: 'rgba(46, 125, 50, 0.05)',
-                      height: '100%',
+                      ...sectionStyle,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      p: 2
                     }}>
-                      <Typography variant="h6" gutterBottom fontWeight="bold">
+                      <Typography variant="h6" gutterBottom fontWeight="bold" color="black">
                         Vote for this route
                       </Typography>
                       
-                      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
                         <Box onClick={(e) => e.stopPropagation()}>
                           <RouteVote 
                             routeId={routeId} 
@@ -524,13 +551,13 @@ const RouteDetail = () => {
                         </Box>
                       </Box>
                     </Box>
-                  </Grid>
-                )}
-              </Grid>
+                  )}
+                </Box>
+              </Box>
             </CardContent>
           </Card>
           
-          <Divider sx={{ my: 4 }} />
+          <Divider sx={{ my: 4, backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
           
           <RouteReviews routeId={routeId} currentUserId={currentUserId} />
         </Paper>
@@ -541,17 +568,24 @@ const RouteDetail = () => {
         open={deleteDialogOpen}
         onClose={closeDeleteDialog}
         aria-labelledby="delete-dialog-title"
+        PaperProps={{
+          style: {
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+          }
+        }}
       >
-        <DialogTitle id="delete-dialog-title">
+        <DialogTitle id="delete-dialog-title" sx={{ color: 'black' }}>
           Delete route?
         </DialogTitle>
         <DialogContent>
-          <Typography>
+          <Typography color="black">
             Are you sure you want to delete this route? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDeleteDialog} color="primary">
+          <Button onClick={closeDeleteDialog} sx={{ color: 'black' }}>
             Cancel
           </Button>
           <Button onClick={handleDeleteRoute} color="error" autoFocus>

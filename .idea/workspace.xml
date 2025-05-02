@@ -4,10 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="902f7f31-e2f5-4185-a48a-47af38b8aecd" name="更改" comment="fix2">
+    <list default="true" id="902f7f31-e2f5-4185-a48a-47af38b8aecd" name="更改" comment="update frontend style(public route, detail page)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/route_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/route_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/route.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/route.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/LoginForm.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/LoginForm.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/api/routeApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/routeApi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/MapStyles.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MapStyles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/PublicRoutesList.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/PublicRoutesList.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/RouteDetail.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/RouteDetail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/RouteReviews.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/RouteReviews.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -163,7 +174,11 @@
       <workItem from="1746028269765" duration="93000" />
       <workItem from="1746028389127" duration="281000" />
       <workItem from="1746104697007" duration="925000" />
-      <workItem from="1746172113121" duration="1786000" />
+      <workItem from="1746172113121" duration="2466000" />
+      <workItem from="1746176302669" duration="328000" />
+      <workItem from="1746181995023" duration="201000" />
+      <workItem from="1746183185357" duration="1352000" />
+      <workItem from="1746208187281" duration="1911000" />
     </task>
     <task id="LOCAL-00001" summary="test">
       <option name="closed" value="true" />
@@ -221,7 +236,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746028604536</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="update frontend style(public route, detail page)">
+      <option name="closed" value="true" />
+      <created>1746176251152</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1746176251152</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -262,7 +285,8 @@
     <MESSAGE value="Improve the existing functions" />
     <MESSAGE value="fix" />
     <MESSAGE value="fix2" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix2" />
+    <MESSAGE value="update frontend style(public route, detail page)" />
+    <option name="LAST_COMMIT_MESSAGE" value="update frontend style(public route, detail page)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

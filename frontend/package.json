@@ -9,6 +9,7 @@
     "@emotion/styled": "^11.14.0",
     "@here/maps-api-for-javascript": "^1.63.0",
     "@mui/icons-material": "^7.0.2",
+    "@mui/joy": "^5.0.0-beta.52",
     "@mui/material": "^7.0.2",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@svgr/webpack": "^5.5.0",

@@ -5,7 +5,7 @@ from datetime import datetime
 db = None
 
 class Route:
-    def __init__(self, name, locations, user_id, route_id=None, is_public=False, share_count=0, avg_rating=0, review_count=0):
+    def __init__(self, name, locations, user_id, route_id=None, is_public=False, share_count=0, avg_rating=0, review_count=0, image_url=None):
         self.name = name
         self.locations = locations  # List containing location points
         self.user_id = user_id
@@ -15,6 +15,7 @@ class Route:
         self.share_count = share_count
         self.avg_rating = avg_rating
         self.review_count = review_count
+        self.image_url = image_url  # 添加图片URL字段
     
     def to_dict(self):
         return {
@@ -26,7 +27,8 @@ class Route:
             'is_public': self.is_public,
             'share_count': self.share_count,
             'avg_rating': self.avg_rating,
-            'review_count': self.review_count
+            'review_count': self.review_count,
+            'image_url': self.image_url
         }
     
     @staticmethod
@@ -39,18 +41,19 @@ class Route:
             is_public=route_dict.get('is_public', False),
             share_count=route_dict.get('share_count', 0),
             avg_rating=route_dict.get('avg_rating', 0),
-            review_count=route_dict.get('review_count', 0)
+            review_count=route_dict.get('review_count', 0),
+            image_url=route_dict.get('image_url')
         )
         route.created_at = route_dict.get('created_at', datetime.now())
         return route
     
     @staticmethod
-    def create_route(name, locations, user_id, is_public=False):
+    def create_route(name, locations, user_id, is_public=False, image_url=None):
         global db
         if db is None:
             return None
             
-        route = Route(name=name, locations=locations, user_id=user_id, is_public=is_public)
+        route = Route(name=name, locations=locations, user_id=user_id, is_public=is_public, image_url=image_url)
         result = db.routes.insert_one(route.to_dict())
         print(f"success to create ，ID: {route.route_id}")
         return route

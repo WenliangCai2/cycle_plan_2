@@ -37,7 +37,10 @@ import {
   Tabs,
   Tab,
   Avatar,
-  Pagination
+  Pagination,
+  Menu,
+  MenuItem,
+  ListItemIcon
 } from '@mui/material';
 import { 
   Delete as DeleteIcon, 
@@ -54,17 +57,23 @@ import {
   Menu as MenuIcon,
   AccountCircle,
   NavigateBefore as PrevIcon,
-  NavigateNext as NextIcon
+  NavigateNext as NextIcon,
+  ExpandLess,
+  ExpandMore,
+  LocationOn,
+  MyLocation
 } from '@mui/icons-material';
 import Map from './Map';
 import RestaurantList from "./RestaurantList";
 import LoginForm from './LoginForm';
 import { createCustomPoint, getCustomPoints } from './api/customPointApi';
-import { createRoute, getRoutes, deleteRoute } from './api/routeApi';
+import { createRoute, getRoutes, deleteRoute, uploadRouteImage } from './api/routeApi';
 import { logout } from './api/authApi';
 import ProtectedRoute from './components/ProtectedRoute';
 import RouteDetail from './components/RouteDetail';
 import PublicRoutesList from './components/PublicRoutesList';
+// 导入背景图片
+import backgroundImage from './images/AdobeStock_1291231442_Preview.jpeg';
 
 const apikey = '8kY020yd2oSy4ivQKBlxf_a5Bhtizzu0A9deSUakGz8';
 
@@ -74,9 +83,208 @@ const defaultPosition = { lat: 54.9783, lng: -1.6174 };
 // Empty restaurant list - no predefined locations
 const restaurantList = [];
 
-// Paginated Points List Component
-const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPerPage = 5, onDeletePoint }) => {
+// 修改SavedRoutesList组件以匹配PaginatedPointsList的外观和半透明效果
+const SavedRoutesList = ({ routes, onLoadRoute, onViewDetails, onDeleteDialog, mapStyle = false }) => {
   const [page, setPage] = useState(0);
+  const [expanded, setExpanded] = useState(true);
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(routes.length / itemsPerPage);
+  
+  // Get current page routes
+  const currentPageRoutes = routes.slice(
+    page * itemsPerPage,
+    (page + 1) * itemsPerPage
+  );
+  
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
+  
+  return (
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        width: mapStyle ? 240 : '100%',
+        overflow: 'hidden',
+        borderRadius: '8px',
+        mb: 2,
+        ...(mapStyle && {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(5px)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        })
+      }}
+    >
+      <Box 
+        sx={{ 
+          p: mapStyle ? 1 : 1.5,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: mapStyle ? 'rgba(25, 118, 210, 0.85)' : 'primary.main',
+          color: 'white',
+          cursor: 'pointer',
+          ...(mapStyle && {
+            borderTopLeftRadius: '8px',
+            borderTopRightRadius: '8px'
+          })
+        }}
+        onClick={toggleExpand}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <SaveIcon sx={{ mr: mapStyle ? 0.5 : 1, fontSize: mapStyle ? 18 : 24 }} />
+          <Typography variant={mapStyle ? "subtitle2" : "subtitle1"} fontWeight="bold">
+            Saved Routes
+          </Typography>
+        </Box>
+        <IconButton 
+          size="small" 
+          color="inherit"
+          sx={mapStyle ? { p: 0.5 } : {}}
+        >
+          {expanded ? <ExpandLess fontSize={mapStyle ? "small" : "medium"} /> : <ExpandMore fontSize={mapStyle ? "small" : "medium"} />}
+        </IconButton>
+      </Box>
+      
+      {expanded && (
+        <>
+          <List 
+            sx={{ 
+              maxHeight: mapStyle ? '40vh' : '30vh', 
+              overflow: 'auto',
+              p: 0
+            }}
+          >
+            {currentPageRoutes.length > 0 ? (
+              currentPageRoutes.map(route => (
+                <React.Fragment key={route.route_id || route.createdAt}>
+                  {mapStyle && <Divider component="li" />}
+                  <ListItem
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      p: mapStyle ? 1 : 1.5,
+                      bgcolor: mapStyle ? 'transparent' : 'background.paper',
+                      '&:hover': {
+                        bgcolor: mapStyle ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.04)'
+                      }
+                    }}
+                  >
+                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography
+                        variant={mapStyle ? "caption" : "subtitle2"}
+                        sx={{
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          color: mapStyle ? 'white' : 'inherit',
+                          '&:hover': { color: 'primary.main' }
+                        }}
+                        onClick={() => onLoadRoute(route)}
+                      >
+                        {route.name}
+                      </Typography>
+                      <Typography variant="caption" color={mapStyle ? "white" : "text.secondary"} sx={{ opacity: mapStyle ? 0.7 : 1 }}>
+                        {new Date(route.created_at || route.createdAt).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<PreviewIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewDetails(route.route_id);
+                        }}
+                        sx={mapStyle ? { py: 0, px: 1, fontSize: '0.7rem' } : {}}
+                      >
+                        View
+                      </Button>
+                      <Tooltip title="Delete route">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => onDeleteDialog(route.route_id, e)}
+                          sx={mapStyle ? { p: 0.5 } : {}}
+                        >
+                          <DeleteIcon fontSize="small" sx={mapStyle ? { fontSize: 16 } : {}} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </ListItem>
+                </React.Fragment>
+              ))
+            ) : (
+              <ListItem>
+                <Typography variant={mapStyle ? "caption" : "body2"} color={mapStyle ? "white" : "text.secondary"} sx={{ py: 1, width: '100%', textAlign: 'center', opacity: mapStyle ? 0.7 : 1 }}>
+                  No saved routes
+                </Typography>
+              </ListItem>
+            )}
+          </List>
+          
+          {routes.length > 0 && (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              p: mapStyle ? 0.5 : 1, 
+              backgroundColor: mapStyle ? 'rgba(255, 255, 255, 0.85)' : 'background.paper' 
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: mapStyle ? 0.5 : 1 }}>
+                <IconButton 
+                  onClick={() => setPage(0)}
+                  disabled={page === 0 || totalPages <= 1}
+                  size="small"
+                  sx={mapStyle ? { p: 0.5 } : {}}
+                >
+                  <Box component="span" sx={{ fontSize: mapStyle ? '0.9rem' : '1.2rem' }}>«</Box>
+                </IconButton>
+                
+                <IconButton 
+                  onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                  disabled={page === 0 || totalPages <= 1}
+                  size="small"
+                  sx={mapStyle ? { p: 0.5 } : {}}
+                >
+                  <Box component="span" sx={{ fontSize: mapStyle ? '0.9rem' : '1.2rem' }}>‹</Box>
+                </IconButton>
+                
+                <Typography variant={mapStyle ? "caption" : "body2"} sx={{ mx: mapStyle ? 0.5 : 1 }}>
+                  {`${page + 1} / ${Math.max(1, totalPages)}`}
+                </Typography>
+                
+                <IconButton 
+                  onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
+                  disabled={page >= totalPages - 1 || totalPages <= 1}
+                  size="small"
+                  sx={mapStyle ? { p: 0.5 } : {}}
+                >
+                  <Box component="span" sx={{ fontSize: mapStyle ? '0.9rem' : '1.2rem' }}>›</Box>
+                </IconButton>
+                
+                <IconButton 
+                  onClick={() => setPage(totalPages - 1)}
+                  disabled={page >= totalPages - 1 || totalPages <= 1}
+                  size="small"
+                  sx={mapStyle ? { p: 0.5 } : {}}
+                >
+                  <Box component="span" sx={{ fontSize: mapStyle ? '0.9rem' : '1.2rem' }}>»</Box>
+                </IconButton>
+              </Box>
+            </Box>
+          )}
+        </>
+      )}
+    </Paper>
+  );
+};
+
+// Modify the PaginatedPointsList component to enhance click feedback
+const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPerPage = 5, onDeletePoint, mapStyle = false }) => {
+  const [page, setPage] = useState(0);
+  const [expanded, setExpanded] = useState(true);
   const totalPages = Math.ceil(points.length / itemsPerPage);
   
   // Get current page points
@@ -89,115 +297,319 @@ const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPer
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
+
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
   
   return (
     <Box>
-      <Paper variant="outlined" sx={{ mb: 2 }}>
-        <List disablePadding>
-          {currentPagePoints.map((point, index) => (
-            <React.Fragment key={point.point_id || `${page}-${index}`}>
-              {index > 0 && <Divider component="li" />}
-              <ListItem
-                button
-                selected={selectedLocations.some(
-                  l => l.lat === point.location.lat && l.lng === point.location.lng
-                )}
-                onClick={() => onPointClick(point.location)}
-                sx={{
-                  borderRadius: 0,
-                  '&.Mui-selected': {
-                    backgroundColor: `rgba(25, 118, 210, 0.1)`,
-                    '&:hover': {
-                      backgroundColor: `rgba(25, 118, 210, 0.2)`,
-                    }
-                  }
-                }}
-                secondaryAction={
-                  point.isCustom ? (
-                    <IconButton 
-                      edge="end" 
-                      aria-label="delete" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onDeletePoint) onDeletePoint(point);
-                      }}
-                      color="error"
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  ) : null
-                }
-              >
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  mr: point.isCustom ? 5 : 2 // Reserve space for delete button
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 'bold', mr: 1 }}>
-                      {point.name || `${index + 1 + page * itemsPerPage}`}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {point.isCurrentLocation ? 'Current location' : (point.isCustom ? 'Custom point' : 'POI')}
-                  </Typography>
-                </Box>
-              </ListItem>
-            </React.Fragment>
-          ))}
-          
-          {/* If current page doesn't have enough items, add empty item */}
-          {currentPagePoints.length === 0 && (
-            <ListItem>
-              <Typography variant="body2" color="text.secondary" sx={{ py: 2, width: '100%', textAlign: 'center' }}>
-                No points available
+      {mapStyle ? (
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            width: 240,
+            maxHeight: '60vh',
+            overflow: 'hidden',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(5px)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}
+        >
+          <Box 
+            sx={{ 
+              p: 1,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: 'rgba(25, 118, 210, 0.85)',
+              color: 'white',
+              borderTopLeftRadius: '8px',
+              borderTopRightRadius: '8px',
+              cursor: 'pointer'
+            }}
+            onClick={toggleExpand}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <LocationOn sx={{ mr: 0.5, fontSize: 18 }} />
+              <Typography variant="subtitle2" fontWeight="bold">
+                Available Points
               </Typography>
-            </ListItem>
+            </Box>
+            <IconButton 
+              size="small" 
+              color="inherit"
+              sx={{ p: 0.5 }}
+            >
+              {expanded ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+            </IconButton>
+          </Box>
+          
+          {expanded && (
+            <>
+              <List 
+                sx={{ 
+                  maxHeight: '40vh', 
+                  overflow: 'auto',
+                  p: 0
+                }}
+              >
+                {currentPagePoints.map((point, index) => (
+                  <React.Fragment key={point.point_id || `${page}-${index}`}>
+                    {index > 0 && <Divider component="li" />}
+                    <ListItem
+                      button
+                      dense
+                      selected={selectedLocations.some(
+                        l => l.lat === point.location.lat && l.lng === point.location.lng
+                      )}
+                      onClick={() => onPointClick(point.location)}
+                      sx={{
+                        py: 0.3,
+                        px: 1,
+                        transition: 'background-color 0.2s',
+                        '&.Mui-selected': {
+                          backgroundColor: `rgba(25, 118, 210, 0.25)`,
+                          '&:hover': {
+                            backgroundColor: `rgba(25, 118, 210, 0.35)`,
+                          }
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                        }
+                      }}
+                      secondaryAction={
+                        point.isCustom ? (
+                          <IconButton 
+                            edge="end" 
+                            aria-label="delete" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onDeletePoint) onDeletePoint(point);
+                            }}
+                            color="error"
+                            size="small"
+                            sx={{ p: 0.5 }}
+                          >
+                            <DeleteIcon fontSize="small" sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        ) : null
+                      }
+                    >
+                      <Box sx={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        mr: point.isCustom ? 2 : 0
+                      }}>
+                        {point.isCurrentLocation ? (
+                          <MyLocation 
+                            color={selectedLocations.some(
+                              l => l.lat === point.location.lat && l.lng === point.location.lng
+                            ) ? "secondary" : "action"} 
+                            sx={{ 
+                              mr: 0.5, 
+                              fontSize: 16,
+                              transition: 'color 0.2s'
+                            }} 
+                          />
+                        ) : (
+                          <LocationOn 
+                            color={selectedLocations.some(
+                              l => l.lat === point.location.lat && l.lng === point.location.lng
+                            ) ? "primary" : "action"} 
+                            sx={{ 
+                              mr: 0.5, 
+                              fontSize: 16,
+                              transition: 'color 0.2s'
+                            }} 
+                          />
+                        )}
+                        <Box>
+                          <Typography 
+                            variant="caption"
+                            fontWeight={selectedLocations.some(
+                              l => l.lat === point.location.lat && l.lng === point.location.lng
+                            ) ? "bold" : "medium"} 
+                            noWrap
+                            sx={{ transition: 'font-weight 0.2s' }}
+                          >
+                            {point.name || `Point ${index + 1 + page * itemsPerPage}`}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>
+                            {point.isCurrentLocation ? 'Current location' : (point.isCustom ? 'Custom point' : 'POI')}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </ListItem>
+                  </React.Fragment>
+                ))}
+                
+                {currentPagePoints.length === 0 && (
+                  <ListItem>
+                    <Typography variant="caption" color="text.secondary" sx={{ py: 1, width: '100%', textAlign: 'center' }}>
+                      No points available
+                    </Typography>
+                  </ListItem>
+                )}
+              </List>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 0.5, backgroundColor: 'rgba(255, 255, 255, 0.85)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <IconButton 
+                    onClick={() => setPage(0)}
+                    disabled={page === 0}
+                    size="small"
+                    sx={{ p: 0.5 }}
+                  >
+                    <Box component="span" sx={{ fontSize: '0.9rem' }}>«</Box>
+                  </IconButton>
+                  
+                  <IconButton 
+                    onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                    disabled={page === 0}
+                    size="small"
+                    sx={{ p: 0.5 }}
+                  >
+                    <Box component="span" sx={{ fontSize: '0.9rem' }}>‹</Box>
+                  </IconButton>
+                  
+                  <Typography variant="caption" sx={{ mx: 0.5 }}>
+                    {`${page + 1} / ${Math.max(1, totalPages)}`}
+                  </Typography>
+                  
+                  <IconButton 
+                    onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
+                    disabled={page >= totalPages - 1}
+                    size="small"
+                    sx={{ p: 0.5 }}
+                  >
+                    <Box component="span" sx={{ fontSize: '0.9rem' }}>›</Box>
+                  </IconButton>
+                  
+                  <IconButton 
+                    onClick={() => setPage(totalPages - 1)}
+                    disabled={page >= totalPages - 1}
+                    size="small"
+                    sx={{ p: 0.5 }}
+                  >
+                    <Box component="span" sx={{ fontSize: '0.9rem' }}>»</Box>
+                  </IconButton>
+                </Box>
+              </Box>
+            </>
           )}
-        </List>
-      </Paper>
-      
-      {/* Pagination controls */}
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton 
-            onClick={() => setPage(0)}
-            disabled={page === 0}
-            size="small"
-          >
-            <Box component="span" sx={{ fontSize: '1.2rem' }}>«</Box>
-          </IconButton>
+        </Paper>
+      ) : (
+        <>
+          <Paper variant="outlined" sx={{ mb: 2 }}>
+            <List disablePadding>
+              {currentPagePoints.map((point, index) => (
+                <React.Fragment key={point.point_id || `${page}-${index}`}>
+                  {index > 0 && <Divider component="li" />}
+                  <ListItem
+                    button
+                    selected={selectedLocations.some(
+                      l => l.lat === point.location.lat && l.lng === point.location.lng
+                    )}
+                    onClick={() => onPointClick(point.location)}
+                    sx={{
+                      borderRadius: 0,
+                      '&.Mui-selected': {
+                        backgroundColor: `rgba(25, 118, 210, 0.1)`,
+                        '&:hover': {
+                          backgroundColor: `rgba(25, 118, 210, 0.2)`,
+                        }
+                      }
+                    }}
+                    secondaryAction={
+                      point.isCustom ? (
+                        <IconButton 
+                          edge="end" 
+                          aria-label="delete" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onDeletePoint) onDeletePoint(point);
+                          }}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      ) : null
+                    }
+                  >
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      mr: point.isCustom ? 5 : 2 // Reserve space for delete button
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 'bold', mr: 1 }}>
+                          {point.name || `${index + 1 + page * itemsPerPage}`}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {point.isCurrentLocation ? 'Current location' : (point.isCustom ? 'Custom point' : 'POI')}
+                      </Typography>
+                    </Box>
+                  </ListItem>
+                </React.Fragment>
+              ))}
+              
+              {/* If current page doesn't have enough items, add empty item */}
+              {currentPagePoints.length === 0 && (
+                <ListItem>
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 2, width: '100%', textAlign: 'center' }}>
+                    No points available
+                  </Typography>
+                </ListItem>
+              )}
+            </List>
+          </Paper>
           
-          <IconButton 
-            onClick={() => setPage(prev => Math.max(0, prev - 1))}
-            disabled={page === 0}
-            size="small"
-          >
-            <Box component="span" sx={{ fontSize: '1.2rem' }}>‹</Box>
-          </IconButton>
-          
-          <Typography variant="body2" sx={{ mx: 1 }}>
-            {`${page + 1} / ${Math.max(1, totalPages)}`}
-          </Typography>
-          
-          <IconButton 
-            onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
-            disabled={page >= totalPages - 1}
-            size="small"
-          >
-            <Box component="span" sx={{ fontSize: '1.2rem' }}>›</Box>
-          </IconButton>
-          
-          <IconButton 
-            onClick={() => setPage(totalPages - 1)}
-            disabled={page >= totalPages - 1}
-            size="small"
-          >
-            <Box component="span" sx={{ fontSize: '1.2rem' }}>»</Box>
-          </IconButton>
-        </Box>
-      </Box>
+          {/* Pagination controls */}
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton 
+                onClick={() => setPage(0)}
+                disabled={page === 0}
+                size="small"
+              >
+                <Box component="span" sx={{ fontSize: '1.2rem' }}>«</Box>
+              </IconButton>
+              
+              <IconButton 
+                onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                disabled={page === 0}
+                size="small"
+              >
+                <Box component="span" sx={{ fontSize: '1.2rem' }}>‹</Box>
+              </IconButton>
+              
+              <Typography variant="body2" sx={{ mx: 1 }}>
+                {`${page + 1} / ${Math.max(1, totalPages)}`}
+              </Typography>
+              
+              <IconButton 
+                onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={page >= totalPages - 1}
+                size="small"
+              >
+                <Box component="span" sx={{ fontSize: '1.2rem' }}>›</Box>
+              </IconButton>
+              
+              <IconButton 
+                onClick={() => setPage(totalPages - 1)}
+                disabled={page >= totalPages - 1}
+                size="small"
+              >
+                <Box component="span" sx={{ fontSize: '1.2rem' }}>»</Box>
+              </IconButton>
+            </Box>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
@@ -208,6 +620,7 @@ const AppHeader = () => {
   const location = useLocation();
   const [tabValue, setTabValue] = useState(0);
   const username = localStorage.getItem('username') || 'User';
+  const [anchorEl, setAnchorEl] = useState(null);
   
   // Monitor route changes, update tab status
   useEffect(() => {
@@ -224,6 +637,32 @@ const AppHeader = () => {
       navigate('/');
     } else if (newValue === 1) {
       navigate('/public-routes');
+    }
+  };
+  
+  const handleProfileClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('token');
+      handleClose();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('token');
+      handleClose();
+      navigate('/login');
     }
   };
 
@@ -249,12 +688,42 @@ const AppHeader = () => {
         </Box>
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body1" sx={{ mr: 2 }}>
-            {username}
-          </Typography>
-          <Avatar sx={{ bgcolor: 'secondary.main', mr: 2 }}>
-            {username.charAt(0).toUpperCase()}
-          </Avatar>
+          <Button 
+            color="inherit" 
+            onClick={handleProfileClick}
+            sx={{ 
+              textTransform: 'none', 
+              display: 'flex', 
+              alignItems: 'center' 
+            }}
+          >
+            <Typography variant="body1" sx={{ mr: 1 }}>
+              {username}
+            </Typography>
+            <Avatar sx={{ bgcolor: 'secondary.main' }}>
+              {username.charAt(0).toUpperCase()}
+            </Avatar>
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              Logout
+            </MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>
@@ -264,9 +733,19 @@ const AppHeader = () => {
 // Layout component wrapping application content
 const AppLayout = ({ children }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box
+      sx={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <AppHeader />
-      <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+      <Box sx={{ flexGrow: 1, overflow: 'auto', padding: 2 }}>
         {children}
       </Box>
     </Box>
@@ -283,6 +762,9 @@ const MainApp = () => {
   const [newPointLocation, setNewPointLocation] = useState({ lat: null, lng: null });
   const [savedRoutes, setSavedRoutes] = useState([]);
   const [routeName, setRouteName] = useState('');
+  const [routeImage, setRouteImage] = useState(null);
+  const [routeImagePreview, setRouteImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const userId = localStorage.getItem('userId');
   const [userPosition, setUserPosition] = useState(defaultPosition);
   const [locationLoading, setLocationLoading] = useState(true);
@@ -456,11 +938,60 @@ const MainApp = () => {
     }
   };
 
-  // Save current route
+  // Handle image file selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setRouteImage(file);
+      
+      // Create a preview URL for the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setRouteImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Handle image removal
+  const handleRemoveImage = () => {
+    setRouteImage(null);
+    setRouteImagePreview(null);
+    
+    // Reset file input
+    const fileInput = document.getElementById('route-image-input');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  // Save current route with image
   const handleSaveRoute = async (e) => {
     e.preventDefault();
     if (routeName && selectedRestaurants.length > 0) {
       try {
+        let imageUrl = null;
+        
+        // If there's an image selected, upload it first
+        if (routeImage) {
+          setUploadingImage(true);
+          try {
+            const uploadResponse = await uploadRouteImage(routeImage);
+            if (uploadResponse.success) {
+              imageUrl = uploadResponse.image_url;
+              console.log('Image uploaded successfully:', imageUrl);
+            } else {
+              console.error('Image upload failed:', uploadResponse.message);
+              showSnackbar('Image upload failed, but route will still be saved', 'warning');
+            }
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            showSnackbar('Image upload failed, but route will still be saved', 'warning');
+          } finally {
+            setUploadingImage(false);
+          }
+        }
+        
         // Ensure each location in the route has all necessary properties
         const processedLocations = selectedRestaurants.map(location => {
           // Make sure custom points have proper attributes
@@ -478,7 +1009,8 @@ const MainApp = () => {
           name: routeName,
           locations: processedLocations,
           is_public: false, // Default to private
-          user_id: userId // Use user_id to match backend model
+          user_id: userId, // Use user_id to match backend model
+          image_url: imageUrl // Include the image URL if available
         };
         
         const response = await createRoute(newRoute);
@@ -489,12 +1021,16 @@ const MainApp = () => {
           const savedRoute = response.route;
           setSavedRoutes(prev => [...prev, savedRoute]);
           showSnackbar('Route saved successfully');
+          
+          // Reset form
+          setRouteName('');
+          setRouteImage(null);
+          setRouteImagePreview(null);
+          setSelectedRestaurants([]);
         } else {
           console.error('Failed to save route:', response.message);
           showSnackbar('Failed to save route', 'error');
         }
-        
-        setRouteName('');
       } catch (error) {
         console.error('Error saving route:', error);
         showSnackbar('Error saving route', 'error');
@@ -668,66 +1204,25 @@ const MainApp = () => {
         sx={{
           width: 300,
           p: 3,
-          bgcolor: 'background.paper',
+          bgcolor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(5px)',
           overflowY: 'auto',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '12px'
         }}
       >
-        {/* User info and logout button */}
-        <Box sx={{ mb: 3, textAlign: 'center' }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Welcome: {username}
-          </Typography>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            fullWidth
-            sx={{ mb: 1 }}
-          >
-            Logout
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<PublicIcon />}
-            onClick={() => navigate('/public-routes')}
-            fullWidth
-          >
-            Popular Routes
-          </Button>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Route Name Input */}
-        <TextField
-          label="Route Name"
-          variant="outlined"
-          value={routeName}
-          onChange={(e) => setRouteName(e.target.value)}
-          fullWidth
-          sx={{ mb: 2 }}
-        />
-
-        {/* Save Route Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<SaveIcon />}
-          onClick={handleSaveRoute}
-          disabled={!routeName || selectedRestaurants.length === 0}
-          fullWidth
-          sx={{ mb: 3 }}
-        >
-          Save Route
-        </Button>
-
         {/* Add Custom Point Form */}
-        <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+        <Paper elevation={2} sx={{ 
+          p: 2, 
+          mb: 3,
+          bgcolor: 'rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(5px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '8px'
+        }}>
+          <Typography variant="h6" sx={{ mb: 2, color: 'black' }}>
             Add Custom Point
           </Typography>
           
@@ -738,20 +1233,38 @@ const MainApp = () => {
             onChange={(e) => setNewPointName(e.target.value)}
             fullWidth
             required
-            sx={{ mb: 2 }}
+            sx={{ 
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: 'rgba(0, 0, 0, 0.3)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(0, 0, 0, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'primary.main',
+                },
+                bgcolor: 'rgba(255, 255, 255, 0.5)'
+              },
+              '& .MuiInputLabel-root': {
+                color: 'black'
+              }
+            }}
           />
           
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1, color: 'black' }}>
             Click on map to select location
           </Typography>
           
           <Box
             sx={{
               p: 1.5,
-              bgcolor: 'background.default',
+              bgcolor: 'rgba(255, 255, 255, 0.3)',
               borderRadius: 1,
               mb: 2,
-              minHeight: '2rem'
+              minHeight: '2rem',
+              color: 'black'
             }}
           >
             {newPointLocation.lat && newPointLocation.lng
@@ -770,6 +1283,108 @@ const MainApp = () => {
           </Button>
         </Paper>
 
+        {/* Route Name Input */}
+        <TextField
+          label="Route Name"
+          variant="outlined"
+          value={routeName}
+          onChange={(e) => setRouteName(e.target.value)}
+          fullWidth
+          sx={{ 
+            mb: 2, 
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: 'rgba(0, 0, 0, 0.3)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(0, 0, 0, 0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'primary.main',
+              },
+              bgcolor: 'rgba(255, 255, 255, 0.5)'
+            },
+            '& .MuiInputLabel-root': {
+              color: 'black'
+            }
+          }}
+        />
+
+        {/* Route Image Upload */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'black' }}>
+            Route Image (Optional)
+          </Typography>
+          
+          {routeImagePreview ? (
+            <Box sx={{ position: 'relative', mb: 2 }}>
+              <img 
+                src={routeImagePreview} 
+                alt="Route preview" 
+                style={{ 
+                  width: '100%', 
+                  height: 150, 
+                  objectFit: 'cover', 
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.3)'
+                }} 
+              />
+              <IconButton 
+                size="small"
+                sx={{ 
+                  position: 'absolute', 
+                  top: 8, 
+                  right: 8, 
+                  bgcolor: 'rgba(0,0,0,0.5)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.7)'
+                  }
+                }}
+                onClick={handleRemoveImage}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ) : (
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<AddIcon />}
+              fullWidth
+              sx={{ 
+                mb: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.4)'
+                }
+              }}
+            >
+              Add Route Image
+              <input
+                type="file"
+                id="route-image-input"
+                hidden
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </Button>
+          )}
+        </Box>
+
+        {/* Save Route Button */}
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={uploadingImage ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          onClick={handleSaveRoute}
+          disabled={!routeName || selectedRestaurants.length === 0 || uploadingImage}
+          fullWidth
+          sx={{ mb: 3 }}
+        >
+          {uploadingImage ? 'Uploading...' : 'Save Route'}
+        </Button>
+
         {/* Clear Selection Button */}
         <Button
           variant="outlined"
@@ -777,89 +1392,16 @@ const MainApp = () => {
           startIcon={<ClearIcon />}
           onClick={() => setSelectedRestaurants([])}
           fullWidth
-          sx={{ mb: 3 }}
+          sx={{ 
+            mb: 3,
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.4)'
+            }
+          }}
         >
           Clear Selection
         </Button>
-
-        {/* Display All Points (including custom points) with pagination */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Available Points
-          </Typography>
-          
-          {/* Points List with Pagination */}
-          <PaginatedPointsList 
-            points={allPoints}
-            selectedLocations={selectedRestaurants}
-            onPointClick={handleRestaurantClick}
-            onDeletePoint={handleDeleteCustomPoint}
-            itemsPerPage={5}
-          />
-        </Box>
-
-        {/* Saved routes list */}
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          Saved Routes
-        </Typography>
-        <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-          {savedRoutes.map(route => (
-            <Paper
-              key={route.route_id || route.createdAt}
-              elevation={1}
-              sx={{ mb: 1, overflow: 'hidden' }}
-            >
-              <ListItem
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  p: 1.5
-                }}
-              >
-                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      '&:hover': { color: 'primary.main' }
-                    }}
-                    onClick={() => loadSavedRoute(route)}
-                  >
-                    {route.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(route.created_at || route.createdAt).toLocaleDateString()}
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PreviewIcon />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/routes/${route.route_id}`);
-                    }}
-                  >
-                    View Details
-                  </Button>
-                  <Tooltip title="Delete route">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => openDeleteDialog(route.route_id, e)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </ListItem>
-            </Paper>
-          ))}
-        </List>
       </Paper>
 
       {/* Map Component - Using fixed height container */}
@@ -870,11 +1412,25 @@ const MainApp = () => {
         flexDirection: 'column',
         height: 'calc(100vh - 64px)', // Viewport height minus top navigation bar height
         maxHeight: 'calc(100vh - 64px)',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        m: 1, // Margin
-        overflow: 'hidden' // Prevent content overflow
+        border: 'none',
+        borderRadius: '16px',
+        m: 2, // 增加外边距
+        overflow: 'hidden', // Prevent content overflow
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
       }}>
+        {/* 添加一个半透明边框效果 */}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          border: '2px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '16px',
+          zIndex: 2,
+          pointerEvents: 'none', // 确保边框不会干扰地图交互
+        }} />
+        
         {locationLoading && (
           <Box
             sx={{
@@ -887,7 +1443,8 @@ const MainApp = () => {
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              zIndex: 10
+              zIndex: 10,
+              borderRadius: '16px',
             }}
           >
             <Box sx={{ textAlign: 'center' }}>
@@ -899,9 +1456,71 @@ const MainApp = () => {
           </Box>
         )}
         
+        {/* Available Points List - Map Style */}
+        <Box sx={{ 
+          position: 'absolute', 
+          top: 16, 
+          left: 16, 
+          zIndex: 5
+        }}>
+          <PaginatedPointsList 
+            points={allPoints}
+            selectedLocations={selectedRestaurants}
+            onPointClick={handleRestaurantClick}
+            onDeletePoint={handleDeleteCustomPoint}
+            itemsPerPage={5}
+            mapStyle={true}
+          />
+        </Box>
+        
+        {/* Saved Routes List - Map Style */}
+        <Box sx={{ 
+          position: 'absolute', 
+          top: 16, 
+          right: 16, 
+          zIndex: 5
+        }}>
+          <SavedRoutesList 
+            routes={savedRoutes}
+            onLoadRoute={loadSavedRoute}
+            onViewDetails={(routeId) => navigate(`/routes/${routeId}`)}
+            onDeleteDialog={openDeleteDialog}
+            mapStyle={true}
+          />
+        </Box>
+        
+        {/* 顶部和底部渐变效果 */}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '60px',
+          background: 'linear-gradient(to bottom, rgba(255,255,255,0.15), transparent)',
+          zIndex: 1,
+          pointerEvents: 'none',
+          borderTopLeftRadius: '16px',
+          borderTopRightRadius: '16px',
+        }} />
+        
+        <Box sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '60px',
+          background: 'linear-gradient(to top, rgba(255,255,255,0.15), transparent)',
+          zIndex: 1,
+          pointerEvents: 'none',
+          borderBottomLeftRadius: '16px',
+          borderBottomRightRadius: '16px',
+        }} />
+        
         {/* Map Component */}
         <Box component="div" sx={{ 
           flexGrow: 1,
+          borderRadius: '16px',
+          overflow: 'hidden',
           '& > div': { 
             height: '100% !important', 
             width: '100% !important'

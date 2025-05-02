@@ -33,6 +33,12 @@ const Map = (props) => {
     const createPOIControlPanel = () => {
         const controlContainer = document.createElement('div');
         controlContainer.className = 'poi-control-panel';
+        // 添加定位样式，使控制面板位于左下角
+        controlContainer.style.top = 'auto';
+        controlContainer.style.right = 'auto';
+        controlContainer.style.bottom = '16px';
+        controlContainer.style.left = '16px';
+        
         controlContainer.innerHTML = `
             <div class="poi-controls">
                 <h3>Points of Interest</h3>
@@ -54,7 +60,22 @@ const Map = (props) => {
  
         // Add to the map container
         mapRef.current.appendChild(controlContainer);
- 
+        
+        // 防止点击控制面板时触发地图点击事件
+        controlContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // 防止触摸事件传播
+        controlContainer.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+        });
+        
+        // 防止鼠标事件传播
+        controlContainer.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+
         // Add event listeners
         document.getElementById('poi-radius').addEventListener('input', function() {
             const value = this.value;

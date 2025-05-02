@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPublicRoutes } from '../api/routeApi';
+// 导入背景图片
+import backgroundImage from '../images/AdobeStock_1092964965_Preview.jpeg';
 
 // Material UI imports
 import { 
@@ -45,7 +47,7 @@ import {
 // Components
 import RouteVote from './RouteVote';
 
-// 背景图片数组 - 使用您已上传的图片
+// 背景图片数组 - 使用您已上传的图片（作为默认备用图片）
 const BACKGROUND_IMAGES = [
   '/images/backgrounds/WechatIMG831.jpeg',
   '/images/backgrounds/WechatIMG832.jpeg',
@@ -83,11 +85,11 @@ const PublicRoutesList = () => {
       const response = await getPublicRoutes(page, pagination.pageSize, sort, 'desc');
       
       if (response.success) {
-        // 为每个路线添加背景图片
+        // 为没有图片的路线添加默认背景图片
         const routesWithImages = response.routes.map((route, index) => ({
           ...route,
-          // 循环使用背景图片
-          backgroundImage: BACKGROUND_IMAGES[index % BACKGROUND_IMAGES.length]
+          // 如果路线没有图片，则使用默认图片，否则使用用户上传的图片
+          backgroundImage: route.image_url || BACKGROUND_IMAGES[index % BACKGROUND_IMAGES.length]
         }));
         
         setRoutes(routesWithImages);
@@ -190,7 +192,7 @@ const PublicRoutesList = () => {
   };
 
   const backgroundStyle = {
-    backgroundImage: 'url(/images/cycling-background.jpg)',
+    backgroundImage: `url(${backgroundImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed',
@@ -200,10 +202,11 @@ const PublicRoutesList = () => {
   };
 
   const overlayStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0)',
+    backdropFilter: 'blur(0px)',
     borderRadius: '12px',
     padding: '30px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+    boxShadow: 'none'
   };
 
   return (
@@ -215,14 +218,14 @@ const PublicRoutesList = () => {
               variant="outlined"
               startIcon={<ArrowBackOutlined />}
               onClick={() => navigate('/')}
-              sx={{ borderRadius: '20px' }}
+              sx={{ borderRadius: '20px', color: 'black', borderColor: 'rgba(0, 0, 0, 0.5)' }}
             >
               Back
             </Button>
             <Typography variant="h4" component="h1" fontWeight="bold" sx={{ 
               display: 'flex', 
               alignItems: 'center',
-              color: '#2e7d32'
+              color: 'black'
             }}>
               <DirectionsBike sx={{ mr: 1 }} /> Public Cycling Routes
             </Typography>
@@ -235,7 +238,18 @@ const PublicRoutesList = () => {
               exclusive
               onChange={handleSortChange}
               aria-label="sort routes by"
-              sx={{ backgroundColor: '#f5f5f5', borderRadius: '28px' }}
+              sx={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.2)', 
+                borderRadius: '28px',
+                '& .MuiToggleButton-root': {
+                  color: 'black',
+                  borderColor: 'rgba(0, 0, 0, 0.2)'
+                },
+                '& .MuiToggleButton-root.Mui-selected': {
+                  backgroundColor: 'rgba(46, 125, 50, 0.5)',
+                  color: 'black'
+                }
+              }}
             >
               <ToggleButton value="vote_score" aria-label="sort by votes" sx={{ borderRadius: '28px 0 0 28px' }}>
                 <ThumbUp sx={{ mr: 1 }} />
@@ -272,6 +286,8 @@ const PublicRoutesList = () => {
                         borderRadius: '12px',
                         transition: 'transform 0.2s, box-shadow 0.2s',
                         overflow: 'hidden', // 确保图片不超出卡片边界
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        backdropFilter: 'blur(3px)',
                         '&:hover': {
                           transform: 'translateY(-8px)',
                           boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)'
@@ -290,7 +306,7 @@ const PublicRoutesList = () => {
                       
                       <CardContent sx={{ flexGrow: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                          <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
+                          <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'black' }}>
                             {route.name}
                           </Typography>
                           {route.user_id === currentUserId && (
@@ -312,53 +328,40 @@ const PublicRoutesList = () => {
                             readOnly 
                             size="small" 
                           />
-                          <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                          <Typography variant="body2" color="black" sx={{ ml: 1, opacity: 0.8 }}>
                             ({route.review_count || 0})
                           </Typography>
                         </Box>
                         
-                        <Divider sx={{ my: 1.5 }} />
+                        <Divider sx={{ my: 1.5, backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
                         
-                        <Box sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-around', 
-                          my: 1.5 
-                        }}>
+                      </CardContent>
+                      
+                      <CardActions sx={{ justifyContent: 'space-between', p: 2, bgcolor: 'rgba(46, 125, 50, 0)' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box onClick={(e) => e.stopPropagation()}>
+                            <RouteVote 
+                              routeId={route.route_id} 
+                              isAuthenticated={isAuthenticated}
+                            />
+                          </Box>
                           <Chip
                             icon={<ShareOutlined fontSize="small" />}
                             label={route.share_count || 0}
                             size="small"
                             variant="outlined"
+                            sx={{ cursor: 'pointer', color: 'black', borderColor: 'rgba(0, 0, 0, 0.3)' }}
+                            onClick={(e) => e.stopPropagation()}
                           />
                           <Chip
                             icon={<CommentOutlined fontSize="small" />}
                             label={route.review_count || 0}
                             size="small"
                             variant="outlined"
+                            sx={{ cursor: 'pointer', color: 'black', borderColor: 'rgba(0, 0, 0, 0.3)' }}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </Box>
-                      </CardContent>
-                      
-                      <CardActions sx={{ justifyContent: 'space-between', p: 2, bgcolor: 'rgba(46, 125, 50, 0.05)' }}>
-                        <Box onClick={(e) => e.stopPropagation()}>
-                          <RouteVote 
-                            routeId={route.route_id} 
-                            isAuthenticated={isAuthenticated}
-                          />
-                        </Box>
-                        <Button 
-                          variant="contained"
-                          color="primary"
-                          size="small" 
-                          endIcon={<NavigateNextOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewRouteDetails(route.route_id);
-                          }}
-                          sx={{ borderRadius: '20px' }}
-                        >
-                          View Details
-                        </Button>
                       </CardActions>
                     </Card>
                   </Grid>
@@ -375,6 +378,14 @@ const PublicRoutesList = () => {
                   showFirstButton 
                   showLastButton
                   siblingCount={1}
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: 'black'
+                    },
+                    '& .MuiPaginationItem-page.Mui-selected': {
+                      backgroundColor: 'rgba(46, 125, 50, 0.5)'
+                    }
+                  }}
                 />
               </Box>
             </>
@@ -383,14 +394,14 @@ const PublicRoutesList = () => {
               textAlign: 'center', 
               py: 8, 
               px: 2,
-              bgcolor: 'rgba(0, 0, 0, 0.02)',
+              bgcolor: 'rgba(0, 0, 0, 0)',
               borderRadius: '8px'
             }}>
-              <DirectionsBike sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
+              <DirectionsBike sx={{ fontSize: 60, color: 'black', mb: 2, opacity: 0.7 }} />
+              <Typography variant="h6" color="black">
                 No routes found
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              <Typography variant="body2" color="black" sx={{ mt: 1, opacity: 0.7 }}>
                 Create a new route or check back later
               </Typography>
             </Box>
@@ -403,17 +414,24 @@ const PublicRoutesList = () => {
         open={deleteDialogOpen}
         onClose={closeDeleteDialog}
         aria-labelledby="delete-dialog-title"
+        PaperProps={{
+          style: {
+            backgroundColor: 'rgba(255, 255, 255, 0)',
+            backdropFilter: 'blur(0px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+          }
+        }}
       >
-        <DialogTitle id="delete-dialog-title">
+        <DialogTitle id="delete-dialog-title" sx={{ color: 'black' }}>
           Delete route?
         </DialogTitle>
         <DialogContent>
-          <Typography>
+          <Typography color="black">
             Are you sure you want to delete this route? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDeleteDialog} color="primary">
+          <Button onClick={closeDeleteDialog} sx={{ color: 'black' }}>
             Cancel
           </Button>
           <Button onClick={handleDeleteRoute} color="error" autoFocus>

@@ -2,11 +2,13 @@
 Flask application main file - route planning application
 """
 import datetime
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, request, url_for, send_from_directory
 from flask_cors import CORS
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from config.database import MONGO_URI
+from werkzeug.utils import secure_filename
 
 # Create Flask application
 app = Flask(__name__)
@@ -17,6 +19,21 @@ CORS(app,
      allow_headers=["Content-Type", "Authorization"], 
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      supports_credentials=True)
+
+# Configure file uploads
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+
+# Create upload folder if it doesn't exist
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Utility function to check allowed file extensions
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Connect to MongoDB Atlas
 try:
@@ -79,6 +96,62 @@ except Exception as e:
             'success': False,
             'message': '数据库连接失败，请稍后再试'
         }), 503
+
+# File upload endpoint
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    from controllers.auth_controller import verify_session
+    
+    # Check if user is authenticated
+    user_id = verify_session(request)
+    if not user_id:
+        return jsonify({
+            'success': False,
+            'message': 'Unauthorized'
+        }), 401
+    
+    # Check if the post request has the file part
+    if 'file' not in request.files:
+        return jsonify({
+            'success': False,
+            'message': 'No file part'
+        }), 400
+    
+    file = request.files['file']
+    
+    # If user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        return jsonify({
+            'success': False,
+            'message': 'No selected file'
+        }), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # Add user_id and timestamp to make filename unique
+        unique_filename = f"{user_id}_{int(datetime.datetime.now().timestamp())}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        # Return the URL for the uploaded file
+        file_url = url_for('uploaded_file', filename=unique_filename, _external=True)
+        
+        return jsonify({
+            'success': True,
+            'message': 'File uploaded successfully',
+            'image_url': file_url
+        })
+    
+    return jsonify({
+        'success': False,
+        'message': 'File type not allowed'
+    }), 400
+
+# Serve uploaded files
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 # Common time interface
 @app.route('/time')

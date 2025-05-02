@@ -29,6 +29,32 @@ api.interceptors.request.use(
 );
 
 /**
+ * Upload a route image
+ * @param {File} file - Image file to upload
+ * @returns {Promise} - Promise containing upload result
+ */
+export const uploadRouteImage = async (file) => {
+  try {
+    // Create form data for file upload
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Use axios directly with specific content type for file upload
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': token || ''
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Failed to upload image' };
+  }
+};
+
+/**
  * Get all routes for a user
  * @returns {Promise} - Promise containing list of routes
  */
@@ -137,4 +163,5 @@ export default {
   updateRouteVisibility,
   getPublicRoutes,
   getRouteById,
+  uploadRouteImage,
 }; 

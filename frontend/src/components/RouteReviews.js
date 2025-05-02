@@ -7,7 +7,7 @@ import { getUsernameById } from '../api/userApi';
 const { TextArea } = Input;
 
 /**
- * Review editor component
+ * Review editor component - 修改为适应透明背景的样式
  */
 const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRating, username }) => (
   <div>
@@ -24,6 +24,11 @@ const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRati
         onChange={onChange} 
         value={content} 
         placeholder="Share your thoughts about this route..."
+        style={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+          color: 'white',
+          borderColor: 'rgba(255, 255, 255, 0.3)'
+        }}
       />
     </Form.Item>
     <Form.Item>
@@ -190,32 +195,60 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     }
   };
 
+  // 透明卡片样式
+  const transparentCardStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(5px)',
+    borderRadius: '8px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden'
+  };
+
+  // 透明Card头部样式
+  const cardHeaderStyle = {
+    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+    color: 'white',
+    fontWeight: 'bold',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+  };
+
   return (
     <div className="route-reviews">
       <Card 
         title={
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'white' }}>
             <span>Comments</span>
             {reviewCount > 0 && (
               <span style={{ marginLeft: '10px' }}>
                 <Rate disabled allowHalf value={avgRating} style={{ fontSize: '16px' }} />
-                <span style={{ marginLeft: '10px' }}>({reviewCount} reviews)</span>
+                <span style={{ marginLeft: '10px', color: 'white' }}>({reviewCount} reviews)</span>
               </span>
             )}
           </div>
         }
         loading={loading}
+        style={transparentCardStyle}
+        headStyle={cardHeaderStyle}
+        bodyStyle={{ padding: '16px', color: 'white' }}
       >
         {currentUserId && (
           <Card 
             className="review-editor"
             bordered={false}
-            style={{ marginBottom: '20px' }}
+            style={{ 
+              marginBottom: '20px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '8px' 
+            }}
+            bodyStyle={{ 
+              padding: '16px', 
+              color: 'white' 
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start' }}>
               <Avatar icon={<UserOutlined />} style={{ marginRight: '10px', marginTop: '5px' }} />
               <div style={{ flex: 1 }}>
-                <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{currentUsername}</div>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'white' }}>{currentUsername}</div>
                 <ReviewEditor
                   onChange={handleContentChange}
                   onSubmit={handleSubmit}
@@ -235,14 +268,23 @@ const RouteReviews = ({ routeId, currentUserId }) => {
             className="comment-list"
             itemLayout="horizontal"
             dataSource={reviews}
+            style={{ color: 'white' }}
             renderItem={item => (
-              <List.Item>
+              <List.Item style={{ 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '12px 0' 
+              }}>
                 <List.Item.Meta
                   avatar={<Avatar icon={<UserOutlined />} />}
                   title={
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      color: 'white'
+                    }}>
                       <span>{item.username || usernames[item.user_id] || item.user_id}</span>
-                      <span>
+                      <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem' }}>
                         {formatDate(item.created_at)}
                         {currentUserId === item.user_id && (
                           <Popconfirm
@@ -266,9 +308,9 @@ const RouteReviews = ({ routeId, currentUserId }) => {
                     </div>
                   }
                   description={
-                    <div>
+                    <div style={{ color: 'white' }}>
                       <Rate disabled allowHalf value={item.rating} style={{ fontSize: '14px' }} />
-                      <p>{item.content}</p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '8px' }}>{item.content}</p>
                     </div>
                   }
                 />
@@ -276,7 +318,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
             )}
           />
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ textAlign: 'center', padding: '20px 0', color: 'white' }}>
             {loading ? 'Loading...' : 'No comments yet'}
           </div>
         )}
@@ -289,6 +331,10 @@ const RouteReviews = ({ routeId, currentUserId }) => {
               total={pagination.total}
               onChange={handlePageChange}
               hideOnSinglePage
+              style={{ 
+                '& .ant-pagination-item': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+                '& .ant-pagination-item-active': { backgroundColor: 'rgba(25, 118, 210, 0.5)' }
+              }}
             />
           </div>
         )}

@@ -48,7 +48,8 @@ def create_route():
         name=route_data['name'],
         locations=route_data['locations'],
         user_id=user_id,
-        is_public=route_data.get('is_public', False)
+        is_public=route_data.get('is_public', False),
+        image_url=route_data.get('image_url')
     )
     
     if not route:
