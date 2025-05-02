@@ -25,7 +25,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  CardMedia // 添加CardMedia组件用于显示图片
 } from '@mui/material';
 
 // Material UI icons
@@ -43,6 +44,15 @@ import {
 
 // Components
 import RouteVote from './RouteVote';
+
+// 背景图片数组 - 使用您已上传的图片
+const BACKGROUND_IMAGES = [
+  '/images/backgrounds/WechatIMG831.jpeg',
+  '/images/backgrounds/WechatIMG832.jpeg',
+  '/images/backgrounds/WechatIMG833.jpeg',
+  '/images/backgrounds/WechatIMG834.jpeg',
+  '/images/backgrounds/WechatIMG835.jpeg',
+];
 
 /**
  * Public routes list component with Material UI styling
@@ -73,7 +83,14 @@ const PublicRoutesList = () => {
       const response = await getPublicRoutes(page, pagination.pageSize, sort, 'desc');
       
       if (response.success) {
-        setRoutes(response.routes);
+        // 为每个路线添加背景图片
+        const routesWithImages = response.routes.map((route, index) => ({
+          ...route,
+          // 循环使用背景图片
+          backgroundImage: BACKGROUND_IMAGES[index % BACKGROUND_IMAGES.length]
+        }));
+        
+        setRoutes(routesWithImages);
         setPagination({
           ...pagination,
           current: page,
@@ -254,6 +271,7 @@ const PublicRoutesList = () => {
                         flexDirection: 'column',
                         borderRadius: '12px',
                         transition: 'transform 0.2s, box-shadow 0.2s',
+                        overflow: 'hidden', // 确保图片不超出卡片边界
                         '&:hover': {
                           transform: 'translateY(-8px)',
                           boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)'
@@ -261,6 +279,15 @@ const PublicRoutesList = () => {
                       }}
                       onClick={() => viewRouteDetails(route.route_id)}
                     >
+                      {/* 添加背景图片 */}
+                      <CardMedia
+                        component="img"
+                        height="160"
+                        image={route.backgroundImage}
+                        alt={route.name}
+                        sx={{ objectFit: 'cover' }}
+                      />
+                      
                       <CardContent sx={{ flexGrow: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                           <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
@@ -398,4 +425,4 @@ const PublicRoutesList = () => {
   );
 };
 
-export default PublicRoutesList; 
+export default PublicRoutesList;
