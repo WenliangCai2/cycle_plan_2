@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRouteById, shareRoute, updateRouteVisibility } from '../api/routeApi';
 import { getRouteVotes } from '../api/voteApi';
-import RouteReviews from './RouteReviews';
+import RouteComments from './RouteComments';
 import RouteVote from './RouteVote';
 import Map from '../Map';
 // Import background image
@@ -252,12 +252,6 @@ const RouteDetail = () => {
   };
 
   const backgroundStyle = {
-    backgroundImage: route && route.image_url ? 
-      `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${route.image_url})` : 
-      `url(${backgroundImage})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundAttachment: 'fixed',
     minHeight: '100vh',
     paddingTop: '40px',
     paddingBottom: '40px'
@@ -356,6 +350,8 @@ const RouteDetail = () => {
             <Typography variant="h4" component="h1" fontWeight="bold" sx={{ 
               display: 'flex', 
               alignItems: 'center',
+              justifyContent: 'center',
+              flex: 1,
               color: 'black'
             }}>
               <DirectionsBike sx={{ mr: 1 }} /> Route Details
@@ -639,7 +635,10 @@ const RouteDetail = () => {
           <Divider sx={{ my: 4, backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
           
           <Box id="comments">
-            <RouteReviews routeId={routeId} currentUserId={currentUserId} />
+            <RouteComments 
+              routeId={routeId} 
+              currentUserId={currentUserId} 
+            />
           </Box>
         </Paper>
       </Container>

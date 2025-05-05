@@ -26,7 +26,7 @@ const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRati
         placeholder="Share your thoughts about this route..."
         style={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-          color: 'white',
+          color: 'black',
           borderColor: 'rgba(255, 255, 255, 0.3)'
         }}
       />
@@ -229,7 +229,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
         loading={loading}
         style={transparentCardStyle}
         headStyle={cardHeaderStyle}
-        bodyStyle={{ padding: '16px', color: 'white' }}
+        bodyStyle={{ padding: '16px', color: 'black' }}
       >
         {currentUserId && (
           <Card 
@@ -242,13 +242,13 @@ const RouteReviews = ({ routeId, currentUserId }) => {
             }}
             bodyStyle={{ 
               padding: '16px', 
-              color: 'white' 
+              color: 'black' 
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start' }}>
               <Avatar icon={<UserOutlined />} style={{ marginRight: '10px', marginTop: '5px' }} />
               <div style={{ flex: 1 }}>
-                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'white' }}>{currentUsername}</div>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'black' }}>{currentUsername}</div>
                 <ReviewEditor
                   onChange={handleContentChange}
                   onSubmit={handleSubmit}
@@ -268,7 +268,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
             className="comment-list"
             itemLayout="horizontal"
             dataSource={reviews}
-            style={{ color: 'white' }}
+            style={{ color: 'black' }}
             renderItem={item => (
               <List.Item style={{ 
                 borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
@@ -281,7 +281,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center',
-                      color: 'white'
+                      color: 'black'
                     }}>
                       <span>{item.username || usernames[item.user_id] || item.user_id}</span>
                       <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem' }}>
@@ -308,9 +308,9 @@ const RouteReviews = ({ routeId, currentUserId }) => {
                     </div>
                   }
                   description={
-                    <div style={{ color: 'white' }}>
+                    <div style={{ color: 'black' }}>
                       <Rate disabled allowHalf value={item.rating} style={{ fontSize: '14px' }} />
-                      <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '8px' }}>{item.content}</p>
+                      <p style={{ color: 'black', marginTop: '8px' }}>{item.content}</p>
                     </div>
                   }
                 />
@@ -318,7 +318,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
             )}
           />
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0', color: 'white' }}>
+          <div style={{ textAlign: 'center', padding: '20px 0', color: 'black' }}>
             {loading ? 'Loading...' : 'No comments yet'}
           </div>
         )}

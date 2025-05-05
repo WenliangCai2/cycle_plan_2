@@ -22,9 +22,9 @@ CORS(app,
 
 # Configure file uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'mov'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max-limit for video uploads
 
 # Create upload folder if it doesn't exist
 if not os.path.exists(UPLOAD_FOLDER):
@@ -55,6 +55,7 @@ try:
     import models.review as review_model
     import models.poi as poi_model
     import models.vote as vote_model
+    import models.comment as comment_model
     
     user_model.db = db
     point_model.db = db
@@ -62,7 +63,7 @@ try:
     review_model.db = db
     poi_model.db = db
     vote_model.db = db
-
+    comment_model.db = db
     
     # Import and register route blueprints
     from routes.auth_routes import auth_bp
@@ -72,6 +73,7 @@ try:
     from routes.poi_routes import poi_bp
     from routes.vote_routes import vote_bp
     from routes.user_routes import user_bp
+    from routes.comment_routes import comment_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(custom_point_bp)
@@ -80,6 +82,7 @@ try:
     app.register_blueprint(poi_bp)
     app.register_blueprint(vote_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(comment_bp)
     
     # Initialize vote routes
     from routes.vote_routes import init_routes as init_vote_routes
@@ -137,10 +140,15 @@ def upload_file():
         # Return the URL for the uploaded file
         file_url = url_for('uploaded_file', filename=unique_filename, _external=True)
         
+        # Determine file type (image or video)
+        file_ext = filename.rsplit('.', 1)[1].lower()
+        file_type = 'video' if file_ext in ['mp4', 'webm', 'mov'] else 'image'
+        
         return jsonify({
             'success': True,
             'message': 'File uploaded successfully',
-            'image_url': file_url
+            'file_url': file_url,
+            'file_type': file_type
         })
     
     return jsonify({
