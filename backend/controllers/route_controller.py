@@ -164,11 +164,13 @@ def get_public_routes():
     skip = (page - 1) * limit
     
     routes = Route.get_public_routes(limit=limit, skip=skip, sort_by=sort_by, sort_order=sort_order)
+    total = Route.count_public_routes()
     route_dicts = [route.to_dict() for route in routes]
     
     return jsonify({
         'success': True,
-        'routes': route_dicts
+        'routes': route_dicts,
+        'total': total
     })
 
 def get_route_by_id(route_id):

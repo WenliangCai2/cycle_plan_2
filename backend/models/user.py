@@ -9,8 +9,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 db = None
 
 class User:
-    def __init__(self, username, password=None, user_id=None):
+    def __init__(self, username, password=None, user_id=None, email=None):
         self.username = username
+        self.email = email
         self.password_hash = generate_password_hash(password) if password else None
         self.user_id = user_id or str(uuid.uuid4())
         self.created_at = datetime.now()
@@ -19,6 +20,7 @@ class User:
         """Convert user object to dictionary representation"""
         return {
             'username': self.username,
+            'email': self.email,
             'user_id': self.user_id,
             'password_hash': self.password_hash,
             'created_at': self.created_at
@@ -27,7 +29,7 @@ class User:
     @staticmethod
     def from_dict(user_dict):
         """Create user object from dictionary"""
-        user = User(username=user_dict['username'], user_id=user_dict['user_id'])
+        user = User(username=user_dict['username'], email=user_dict.get('email'), user_id=user_dict['user_id'])
         user.password_hash = user_dict['password_hash']
         user.created_at = user_dict.get('created_at', datetime.now())
         return user
@@ -37,7 +39,7 @@ class User:
         return check_password_hash(self.password_hash, password)
     
     @staticmethod
-    def create_user(username, password):
+    def create_user(username, password, email):
         """Create new user"""
         global db
         if db is None:
@@ -49,7 +51,7 @@ class User:
             return None
         
         # Create new user
-        user = User(username=username, password=password)
+        user = User(username=username, password=password, email=email)
         result = db.users.insert_one(user.to_dict())
         print(f"User created successfully, ID: {user.user_id}")
         return user

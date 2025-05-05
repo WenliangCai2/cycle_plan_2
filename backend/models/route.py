@@ -135,4 +135,11 @@ class Route:
             {'is_public': True}
         ).sort(sort_by, sort_direction).skip(skip).limit(limit)
         
-        return [Route.from_dict(route_dict) for route_dict in route_dicts] 
+        return [Route.from_dict(route_dict) for route_dict in route_dicts]
+
+    @staticmethod
+    def count_public_routes():
+        global db
+        if db is None:
+            return 0
+        return db.routes.count_documents({'is_public': True})

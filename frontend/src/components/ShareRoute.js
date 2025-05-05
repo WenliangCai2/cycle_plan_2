@@ -40,7 +40,7 @@ import {
  * @param {boolean} props.isPublic - Whether the route is public
  * @param {function} props.onVisibilityChange - Callback after visibility change
  */
-const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
+const ShareRoute = ({ routeId, isPublic, onVisibilityChange ,isOwner }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shareLinks, setShareLinks] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,10 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
     try {
       // Get share links
       const response = await shareRoute(routeId);
-      setShareLinks(response.social_links);
+      setShareLinks({
+        ...response.social_links,
+        share_url: response.share_url
+      });
       setIsModalOpen(true);
     } catch (error) {
       setSnackbar({
@@ -108,15 +111,15 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
   const handleVisibilityChange = async (event) => {
     const checked = event.target.checked;
     setLoading(true);
-    
+
     try {
-      await updateRouteVisibility(routeId, checked);
+      const result = await updateRouteVisibility(routeId, checked);
       setPublicSwitch(checked);
-      
+
       if (onVisibilityChange) {
         onVisibilityChange(checked);
       }
-      
+
       setSnackbar({
         open: true,
         message: checked ? 'Route is now public' : 'Route is now private',
@@ -128,9 +131,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
         message: 'Failed to update route visibility',
         severity: 'error'
       });
-      console.error(error);
-      // Restore switch state
-      setPublicSwitch(isPublic);
+      setPublicSwitch((prev) => !prev);
     } finally {
       setLoading(false);
     }
@@ -156,13 +157,13 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange }) => {
             Share
           </Button>
         </Tooltip>
-        
+
         <FormControlLabel
           control={
             <Switch
               checked={publicSwitch}
               onChange={handleVisibilityChange}
-              disabled={loading}
+              disabled={!isOwner || loading}
               icon={<LockOutlined />}
               checkedIcon={<PublicOutlined />}
               color="primary"

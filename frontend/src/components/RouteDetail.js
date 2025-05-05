@@ -374,16 +374,15 @@ const RouteDetail = () => {
                     variant="outlined"
                     sx={{ mr: 1 }}
                   />
-                  
-                  {isOwner && (
-                    <Box onClick={(e) => e.stopPropagation()}>
-                      <ShareRoute 
-                        routeId={routeId} 
-                        isPublic={route.is_public} 
-                        onVisibilityChange={handleVisibilityChange} 
-                      />
-                    </Box>
-                  )}
+
+                  <Box onClick={(e) => e.stopPropagation()}>
+                    <ShareRoute
+                        routeId={routeId}
+                        isPublic={route.is_public}
+                        onVisibilityChange={isOwner ? handleVisibilityChange : null}  // 仅拥有者可变更可见性
+                        isOwner={isOwner}  // ✅ 传递 isOwner 给 ShareRoute 控制开关是否可编辑
+                    />
+                  </Box>
                 </Box>
               </Box>
               
@@ -396,7 +395,7 @@ const RouteDetail = () => {
               }}>
                 {/* Map Section - 左侧占据更多空间 */}
                 <Box sx={{ 
-                  height: '400px', 
+                  height: '70vh',
                   borderRadius: '8px', 
                   overflow: 'hidden',
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',

@@ -15,7 +15,7 @@ const Map = (props) => {
     const [poiRadius, setPoiRadius] = useState(500);
     const [poiCategory, setPoiCategory] = useState('restaurants');
     const [processedPOIs, setProcessedPOIs] = useState(new Set());
-   
+
     const { apikey, userPosition, selectedLocations, onMapClick, customPoints, restaurantList, loading } = props;
  
     // POI categories mapping
@@ -216,45 +216,46 @@ const Map = (props) => {
  
     // Search for POIs near a specific location
     const searchPOIsNearby = (lat, lng, radius, category) => {
-        // Create a search request using the HERE Places API
-        const params = {
-            at: `${lat},${lng}`,
-            limit: 20,
-            radius: radius,
-            categories: poiCategories[category]
-        };
-       
-        // Convert params object to URL parameters
-        const urlParams = new URLSearchParams(params);
-       
-        // Make the API request to HERE Places API
-        fetch(`https://places.ls.hereapi.com/places/v1/browse?apiKey=${apikey}&${urlParams}`)
+        const query = encodeURIComponent(category);
+        const url = `https://discover.search.hereapi.com/v1/discover?at=${lat},${lng}&q=${query}&limit=10&apikey=${apikey}`;
+
+        console.log('[DEBUG] POI request URL:', url);
+
+        fetch(url)
             .then(response => response.json())
             .then(data => {
-                if (data.items && data.items.length > 0) {
+                console.log('[DEBUG] POI response:', data);
+
+                if (data.items && Array.isArray(data.items)) {
                     const newProcessedPOIs = new Set(processedPOIs);
-                   
+
                     data.items.forEach(poi => {
-                        // Skip if this POI has already been processed
-                        if (newProcessedPOIs.has(poi.id)) {
-                            return;
+                        if (!newProcessedPOIs.has(poi.id)) {
+                            newProcessedPOIs.add(poi.id);
+
+                            const poiData = {
+                                id: poi.id,
+                                position: [poi.position.lat, poi.position.lng],
+                                title: poi.title,
+                                name: poi.title,
+                            };
+
+                            addPOIMarker(poiData);
                         }
-                       
-                        // Add to processed set
-                        newProcessedPOIs.add(poi.id);
-                       
-                        // Add marker for this POI
-                        addPOIMarker(poi);
                     });
-                   
+
                     setProcessedPOIs(newProcessedPOIs);
+                } else {
+                    console.warn('[WARN] No POIs found for query:', query);
                 }
             })
             .catch(error => {
-                console.error('Error fetching POIs:', error);
+                console.error('[ERROR] POI fetch failed:', error);
             });
     };
- 
+
+
+
     // Find POIs along the route within the specified radius
     const findPOIsAlongRoute = () => {
         clearPOIs();

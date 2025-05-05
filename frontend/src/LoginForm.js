@@ -63,6 +63,9 @@ const LoginForm = ({ onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [codeSending, setCodeSending] = useState(false);
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -92,8 +95,10 @@ const LoginForm = ({ onLoginSuccess }) => {
       }
 
       const payload = isResettingPassword
-        ? { username, new_password: password }
-        : { username, password };
+        ? { username, new_password: password, email, code}
+        : isLogin
+        ? { username, password }
+        : { username, password, email, code };
 
       console.log('Sending request to:', endpoint);
 
@@ -123,6 +128,30 @@ const LoginForm = ({ onLoginSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendCode = async () => {
+      if (!email) {
+          setErrorMessage('Please enter your email first');
+          return;
+      }
+      setCodeSending(true);
+      try {
+          const res = await axios.post('http://localhost:5000/api/send_verification_code', {
+              email,
+              purpose: isResettingPassword ? 'reset' : 'register',
+          });
+          if (res.data.success) {
+              alert('Verification code sent to your email successfully!');
+          } else {
+              setErrorMessage(res.data.message);
+          }
+      } catch (err) {
+          console.error('Send code error:', err);
+          setErrorMessage('Failed to send code');
+      } finally {
+          setCodeSending(false);
+      }
   };
 
   // Toggle between login/register mode
@@ -270,67 +299,102 @@ const LoginForm = ({ onLoginSuccess }) => {
             </Stack>
             
             {isLogin && !isResettingPassword && <Divider>or</Divider>}
-            
-            <Stack sx={{ gap: 4, mt: 2 }}>
-              <form onSubmit={handleSubmit}>
-                <FormControl required>
-                  <FormLabel>Username</FormLabel>
-                  <Input 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    name="username" 
-                  />
-                </FormControl>
-                
-                <FormControl required>
-                  <FormLabel>{isResettingPassword ? 'New Password' : 'Password'}</FormLabel>
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    endDecorator={
-                      <IconButton onClick={togglePasswordVisibility}>
-                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    }
-                  />
-                </FormControl>
-                
-                <Stack sx={{ gap: 4, mt: 2 }}>
-                  {isLogin && !isResettingPassword && (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Checkbox size="sm" label="Remember me" name="persistent" />
-                      <Link 
-                        level="title-sm" 
-                        href="#" 
-                        onClick={switchToResetPassword}
-                      >
-                        Forgot password?
-                      </Link>
-                    </Box>
-                  )}
-                  
-                  <Button 
-                    type="submit" 
-                    fullWidth
-                    loading={loading}
-                  >
-                    {isResettingPassword
-                      ? 'Reset Password'
-                      : isLogin
-                        ? 'Sign In'
-                        : 'Register'}
-                  </Button>
-                </Stack>
-              </form>
-            </Stack>
+
+              <Stack sx={{ gap: 4, mt: 2 }}>
+                  <form onSubmit={handleSubmit}>
+                      <FormControl required>
+                          <FormLabel>Username</FormLabel>
+                          <Input
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              name="username"
+                          />
+                      </FormControl>
+
+                      {/* 注册和重置密码都需要输入邮箱和验证码 */}
+                      {(!isLogin || isResettingPassword) && (
+                          <>
+                              <FormControl required>
+                                  <FormLabel>Email</FormLabel>
+                                  <Input
+                                      type="email"
+                                      value={email}
+                                      onChange={(e) => setEmail(e.target.value)}
+                                      name="email"
+                                  />
+                              </FormControl>
+
+                              <FormControl required>
+                                  <FormLabel>Verification Code</FormLabel>
+                                  <Input
+                                      value={code}
+                                      onChange={(e) => setCode(e.target.value)}
+                                      name="code"
+                                      endDecorator={
+                                          <Button
+                                              size="sm"
+                                              onClick={handleSendCode}
+                                              disabled={codeSending || !email}
+                                          >
+                                              {codeSending ? 'Sending...' : 'Send Code'}
+                                          </Button>
+                                      }
+                                  />
+                              </FormControl>
+                          </>
+                      )}
+
+                      <FormControl required>
+                          <FormLabel>{isResettingPassword ? 'New Password' : 'Password'}</FormLabel>
+                          <Input
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              endDecorator={
+                                  <IconButton onClick={togglePasswordVisibility}>
+                                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                  </IconButton>
+                              }
+                          />
+                      </FormControl>
+
+                      <Stack sx={{ gap: 4, mt: 2 }}>
+                          {isLogin && !isResettingPassword && (
+                              <Box
+                                  sx={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                  }}
+                              >
+                                  <Checkbox size="sm" label="Remember me" name="persistent" />
+                                  <Link
+                                      level="title-sm"
+                                      href="#"
+                                      onClick={switchToResetPassword}
+                                  >
+                                      Forgot password?
+                                  </Link>
+                              </Box>
+                          )}
+
+                          <Button
+                              type="submit"
+                              fullWidth
+                              loading={loading}
+                          >
+                              {isResettingPassword
+                                  ? 'Reset Password'
+                                  : isLogin
+                                      ? 'Sign In'
+                                      : 'Register'}
+                          </Button>
+                      </Stack>
+                  </form>
+              </Stack>
+
+
           </Box>
           <Box component="footer" sx={{ py: 3 }}>
             <Typography level="body-xs" sx={{ textAlign: 'center' }}>

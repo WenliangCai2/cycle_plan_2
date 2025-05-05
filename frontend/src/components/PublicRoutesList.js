@@ -96,7 +96,7 @@ const PublicRoutesList = () => {
         setPagination({
           ...pagination,
           current: page,
-          total: response.routes.length // Need to set based on API response total
+          total: response.total || 0
         });
       } else {
         console.error('Failed to get routes');

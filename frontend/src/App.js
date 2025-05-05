@@ -1581,6 +1581,20 @@ const MainApp = () => {
 
 // Main App component
 function App() {
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  useEffect(() => {
+    const accepted = localStorage.getItem('disclaimerAccepted');
+    if (!accepted) {
+      setShowDisclaimer(true);
+    }
+  }, []);
+
+  const handleAcceptDisclaimer = () => {
+    localStorage.setItem('disclaimerAccepted', 'true');
+    setShowDisclaimer(false);
+  };
+
   // Define handleLoginSuccess function and pass it to LoginForm component
   const handleLoginSuccess = (userId, username) => {
     console.log("User logged in successfully:", userId, username);
@@ -1625,6 +1639,25 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <Dialog open={showDisclaimer} disableEscapeKeyDown>
+        <DialogTitle>Disclaimer</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            This route information is provided for reference only.
+          </Typography>
+          <Typography gutterBottom>
+            Safety and accuracy of the route cannot be guaranteed.
+          </Typography>
+          <Typography gutterBottom>
+            Users should assess local conditions and ride at their own risk.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAcceptDisclaimer} variant="contained" color="primary">
+            Accept
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Router>
   );
 }
