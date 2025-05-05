@@ -15,7 +15,7 @@ class Route:
         self.share_count = share_count
         self.avg_rating = avg_rating
         self.review_count = review_count
-        self.image_url = image_url  # 添加图片URL字段
+        self.image_url = image_url  # Add image URL field
     
     def to_dict(self):
         return {

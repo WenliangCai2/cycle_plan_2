@@ -16,16 +16,16 @@ def register():
     username = data.get('username')
     password = data.get('password')
     email = data.get('email')
-    code = data.get('code')  # 用户输入的验证码
+    code = data.get('code')  # Verification code entered by user
 
-    # 检查字段完整性
+    # Check field completeness
     if not username or not password or not email or not code:
         return jsonify({
             'success': False,
             'message': 'Username, password, email and code are required'
         }), 400
 
-    # 验证码验证
+    # Verify verification code
     cached_code = get_cached_code(email)
     if not cached_code or cached_code != code:
         return jsonify({
@@ -33,7 +33,7 @@ def register():
             'message': 'Invalid or expired verification code'
         }), 401
 
-    # 检查用户名是否已存在
+    # Check if username already exists
     existing_user = User.get_user_by_username(username)
     if existing_user:
         return jsonify({
@@ -41,22 +41,22 @@ def register():
             'message': 'Username already exists'
         }), 400
 
-    # 检查密码长度
+    # Check password length
     if len(password) < 8:
         return jsonify({
             'success': False,
             'message': 'Password must be at least 8 characters long'
         }), 400
 
-    # 创建用户
-    user = User.create_user(username, password, email=email)  # 需支持存邮箱
+    # Create user
+    user = User.create_user(username, password, email=email)  # Should support storing email
     if not user:
         return jsonify({
             'success': False,
             'message': 'Registration failed'
         }), 500
 
-    # 登录成功：创建 session
+    # Successful login: create session
     token = str(uuid.uuid4())
     USER_SESSIONS[token] = user.user_id
 
@@ -130,7 +130,7 @@ def reset_password():
             'message': 'Password must be at least 8 characters long'
         }), 400
 
-    # 验证码验证
+    # Verify verification code
     cached_code = get_cached_code(email)
     if not cached_code or cached_code != code:
         return jsonify({
@@ -145,7 +145,7 @@ def reset_password():
             'message': 'User does not exist'
         }), 404
 
-    # 修改密码
+    # Change password
     success = user.update_password(new_password)
     if not success:
         return jsonify({

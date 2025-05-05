@@ -3,6 +3,8 @@ import time
 import requests
 import os
 from dotenv import load_dotenv
+
+# Load environment variables only once
 load_dotenv()
 
 verification_cache = {}

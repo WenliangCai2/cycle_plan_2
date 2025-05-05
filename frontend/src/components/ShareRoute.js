@@ -39,8 +39,9 @@ import {
  * @param {string} props.routeId - Route ID
  * @param {boolean} props.isPublic - Whether the route is public
  * @param {function} props.onVisibilityChange - Callback after visibility change
+ * @param {boolean} props.hideControls - Whether to hide the public/private controls
  */
-const ShareRoute = ({ routeId, isPublic, onVisibilityChange ,isOwner }) => {
+const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideControls, id }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shareLinks, setShareLinks] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -151,31 +152,34 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange ,isOwner }) => {
             startIcon={<ShareIcon />} 
             onClick={showModal}
             disabled={loading}
-            sx={{ mr: 1, borderRadius: '20px' }}
+            sx={{ mr: hideControls ? 0 : 1, borderRadius: '20px' }}
             size="small"
+            id={id}
           >
             Share
           </Button>
         </Tooltip>
 
-        <FormControlLabel
-          control={
-            <Switch
-              checked={publicSwitch}
-              onChange={handleVisibilityChange}
-              disabled={!isOwner || loading}
-              icon={<LockOutlined />}
-              checkedIcon={<PublicOutlined />}
-              color="primary"
-            />
-          }
-          label={
-            <Typography variant="body2">
-              {publicSwitch ? "Public" : "Private"}
-            </Typography>
-          }
-          sx={{ ml: 0 }}
-        />
+        {!hideControls && (
+          <FormControlLabel
+            control={
+              <Switch
+                checked={publicSwitch}
+                onChange={handleVisibilityChange}
+                disabled={!isOwner || loading}
+                icon={<LockOutlined />}
+                checkedIcon={<PublicOutlined />}
+                color="primary"
+              />
+            }
+            label={
+              <Typography variant="body2">
+                {publicSwitch ? "Public" : "Private"}
+              </Typography>
+            }
+            sx={{ ml: 0 }}
+          />
+        )}
       </Box>
 
       <Dialog

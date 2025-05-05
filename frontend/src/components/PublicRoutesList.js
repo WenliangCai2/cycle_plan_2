@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPublicRoutes } from '../api/routeApi';
-// 导入背景图片
+import { getPublicRoutes, shareRoute } from '../api/routeApi';
+// Import background image
 import backgroundImage from '../images/AdobeStock_1092964965_Preview.jpeg';
 
 // Material UI imports
@@ -28,26 +28,24 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CardMedia // 添加CardMedia组件用于显示图片
+  CardMedia
 } from '@mui/material';
 
 // Material UI icons
 import {
-  ThumbUpOutlined,
   ThumbUp,
   ShareOutlined,
   StarOutlined,
   ArrowBackOutlined,
   DeleteOutline,
   DirectionsBike,
-  CommentOutlined,
-  NavigateNextOutlined
+  CommentOutlined
 } from '@mui/icons-material';
 
 // Components
 import RouteVote from './RouteVote';
 
-// 背景图片数组 - 使用您已上传的图片（作为默认备用图片）
+// Background image array - using uploaded images (as default fallback images)
 const BACKGROUND_IMAGES = [
   '/images/backgrounds/WechatIMG831.jpeg',
   '/images/backgrounds/WechatIMG832.jpeg',
@@ -85,10 +83,10 @@ const PublicRoutesList = () => {
       const response = await getPublicRoutes(page, pagination.pageSize, sort, 'desc');
       
       if (response.success) {
-        // 为没有图片的路线添加默认背景图片
+        // Add default background image for routes without images
         const routesWithImages = response.routes.map((route, index) => ({
           ...route,
-          // 如果路线没有图片，则使用默认图片，否则使用用户上传的图片
+          // If the route has no image, use default image, otherwise use the user-uploaded image
           backgroundImage: route.image_url || BACKGROUND_IMAGES[index % BACKGROUND_IMAGES.length]
         }));
         
@@ -111,7 +109,7 @@ const PublicRoutesList = () => {
   // Load public routes after component mount
   useEffect(() => {
     fetchPublicRoutes();
-  }, []);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle pagination change
   const handlePageChange = (event, page) => {
@@ -217,7 +215,7 @@ const PublicRoutesList = () => {
             <Button 
               variant="outlined"
               startIcon={<ArrowBackOutlined />}
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/mainPage')}
               sx={{ borderRadius: '20px', color: 'black', borderColor: 'rgba(0, 0, 0, 0.5)' }}
             >
               Back
@@ -275,7 +273,7 @@ const PublicRoutesList = () => {
           
           {routes.length > 0 ? (
             <>
-              <Grid container spacing={3}>
+              <Grid container spacing={3} justifyContent="center">
                 {routes.map(route => (
                   <Grid item xs={12} sm={6} md={4} key={route.route_id}>
                     <Card 
@@ -285,8 +283,8 @@ const PublicRoutesList = () => {
                         flexDirection: 'column',
                         borderRadius: '12px',
                         transition: 'transform 0.2s, box-shadow 0.2s',
-                        overflow: 'hidden', // 确保图片不超出卡片边界
-                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        overflow: 'hidden', // Ensure images don't exceed card boundaries
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)',
                         backdropFilter: 'blur(3px)',
                         '&:hover': {
                           transform: 'translateY(-8px)',
@@ -295,7 +293,7 @@ const PublicRoutesList = () => {
                       }}
                       onClick={() => viewRouteDetails(route.route_id)}
                     >
-                      {/* 添加背景图片 */}
+                      {/* Add background image */}
                       <CardMedia
                         component="img"
                         height="160"
@@ -345,21 +343,65 @@ const PublicRoutesList = () => {
                               isAuthenticated={isAuthenticated}
                             />
                           </Box>
-                          <Chip
-                            icon={<ShareOutlined fontSize="small" />}
-                            label={route.share_count || 0}
-                            size="small"
-                            variant="outlined"
-                            sx={{ cursor: 'pointer', color: 'black', borderColor: 'rgba(0, 0, 0, 0.3)' }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                          <Box onClick={(e) => e.stopPropagation()}>
+                            <Chip
+                              icon={<ShareOutlined fontSize="small" />}
+                              label={route.share_count || 0}
+                              size="small"
+                              variant="outlined"
+                              sx={{ cursor: 'pointer', color: 'black', borderColor: 'rgba(0, 0, 0, 0.3)' }}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  // Call share API and get share link
+                                  const response = await shareRoute(route.route_id);
+                                  
+                                  // Use modern Web API sharing feature (if browser supports)
+                                  if (navigator.share) {
+                                    await navigator.share({
+                                      title: route.name,
+                                      text: `Check out this cycling route: ${route.name}`,
+                                      url: response.share_url
+                                    });
+                                  } else {
+                                    // If Web sharing API is not available, redirect to share page
+                                    navigate(`/routes/${route.route_id}`);
+                                    
+                                    // Copy link to clipboard
+                                    navigator.clipboard.writeText(response.share_url)
+                                      .then(() => {
+                                        alert('Link copied to clipboard!');
+                                      })
+                                      .catch(err => {
+                                        console.error('Unable to copy link:', err);
+                                      });
+                                  }
+                                  
+                                  // Local update share count
+                                  setRoutes(prevRoutes => 
+                                    prevRoutes.map(r => 
+                                      r.route_id === route.route_id 
+                                        ? { ...r, share_count: (r.share_count || 0) + 1 } 
+                                        : r
+                                    )
+                                  );
+                                } catch (error) {
+                                  console.error('Failed to share route:', error);
+                                  alert('Failed to share, please try again later.');
+                                }
+                              }}
+                            />
+                          </Box>
                           <Chip
                             icon={<CommentOutlined fontSize="small" />}
                             label={route.review_count || 0}
                             size="small"
                             variant="outlined"
                             sx={{ cursor: 'pointer', color: 'black', borderColor: 'rgba(0, 0, 0, 0.3)' }}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/routes/${route.route_id}#comments`);
+                            }}
                           />
                         </Box>
                       </CardActions>
@@ -416,8 +458,8 @@ const PublicRoutesList = () => {
         aria-labelledby="delete-dialog-title"
         PaperProps={{
           style: {
-            backgroundColor: 'rgba(255, 255, 255, 0)',
-            backdropFilter: 'blur(0px)',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backdropFilter: 'blur(3px)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
           }
         }}

@@ -94,7 +94,7 @@ except Exception as e:
     def database_error(path):
         return jsonify({
             'success': False,
-            'message': '数据库连接失败，请稍后再试'
+            'message': 'Database connection failed, please try again later'
         }), 503
 
 # File upload endpoint

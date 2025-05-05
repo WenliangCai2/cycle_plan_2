@@ -12,7 +12,7 @@ class Review:
         self.route_id = route_id
         self.user_id = user_id
         self.content = content
-        self.rating = rating  # 1-5 星级评分
+        self.rating = rating  # 1-5 star rating
         self.review_id = review_id or str(uuid.uuid4())
         self.created_at = datetime.now()
         self.username = None  # Add username field

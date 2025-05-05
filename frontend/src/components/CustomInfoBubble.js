@@ -1,7 +1,8 @@
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { Typography, Paper, Box } from '@mui/material';
+import { Typography, Paper, Box, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Compact bubble style
 const CompactBubble = styled(Paper)(({ theme }) => ({
@@ -34,13 +35,37 @@ export const createInfoBubbleContent = (data) => {
   // Create React render container
   const container = document.createElement('div');
   
+  // Add a special class for easier reference
+  container.className = 'h-info-bubble-container';
+  
   // Define React component
   const InfoBubbleContent = () => (
     <CompactBubble>
-      <Box sx={{ textAlign: 'center' }}>
+      <Box sx={{ 
+        textAlign: 'center',
+        position: 'relative',
+        pr: 3 // Add padding to the right for the close button
+      }}>
         <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
           {name}
         </Typography>
+        <IconButton 
+          aria-label="close"
+          size="small"
+          sx={{ 
+            position: 'absolute', 
+            top: -8, 
+            right: -8,
+            padding: 0.5,
+            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 1)',
+            } 
+          }}
+          className="info-bubble-close-btn"
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
       </Box>
     </CompactBubble>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { CssVarsProvider, extendTheme, useColorScheme } from '@mui/joy/styles';
@@ -7,7 +7,6 @@ import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
 import Checkbox from '@mui/joy/Checkbox';
-import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import IconButton from '@mui/joy/IconButton';
@@ -23,13 +22,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExploreIcon from '@mui/icons-material/Explore';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import GoogleIcon from './GoogleIcon';
 
-// 使用网络图片URL代替本地图片
+// Use web image URLs instead of local images
 const lightBgImage = "https://images.unsplash.com/photo-1527181152855-fc03fc7949c8?auto=format&w=1000&dpr=2";
 const darkBgImage = "https://images.unsplash.com/photo-1572072393749-3ca9c8ea0831?auto=format&w=1000&dpr=2";
 
-// ColorSchemeToggle 组件
+// ColorSchemeToggle component
 function ColorSchemeToggle(props) {
   const { onClick, ...other } = props;
   const { mode, setMode } = useColorScheme();
@@ -117,7 +115,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           localStorage.setItem('userId', response.data.userId);
           localStorage.setItem('username', username);
           onLoginSuccess(response.data.userId, username);
-          navigate('/');
+          navigate('/mainPage');
         }
       } else {
         setErrorMessage(response.data.message || 'Operation failed');
@@ -173,7 +171,7 @@ const LoginForm = ({ onLoginSuccess }) => {
     setIsLogin(true);
     setErrorMessage('');
   };
-
+  
   // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -285,22 +283,9 @@ const LoginForm = ({ onLoginSuccess }) => {
                   </Typography>
                 )}
               </Stack>
-              
-              {isLogin && !isResettingPassword && (
-                <Button
-                  variant="soft"
-                  color="neutral"
-                  fullWidth
-                  startDecorator={<GoogleIcon />}
-                >
-                  Continue with Google
-                </Button>
-              )}
             </Stack>
             
-            {isLogin && !isResettingPassword && <Divider>or</Divider>}
-
-              <Stack sx={{ gap: 4, mt: 2 }}>
+            <Stack sx={{ gap: 4, mt: 2 }}>
                   <form onSubmit={handleSubmit}>
                       <FormControl required>
                           <FormLabel>Username</FormLabel>
@@ -311,35 +296,37 @@ const LoginForm = ({ onLoginSuccess }) => {
                           />
                       </FormControl>
 
-                      {/* 注册和重置密码都需要输入邮箱和验证码 */}
-                      {(!isLogin || isResettingPassword) && (
+                      {/* Registration and password reset both require email and verification code */}
+                      {(isResettingPassword || !isLogin) && (
                           <>
                               <FormControl required>
                                   <FormLabel>Email</FormLabel>
                                   <Input
                                       type="email"
+                                      placeholder="Enter your email"
                                       value={email}
                                       onChange={(e) => setEmail(e.target.value)}
-                                      name="email"
                                   />
                               </FormControl>
-
-                              <FormControl required>
+                              <FormControl required sx={{ gap: 1, mb: 1 }}>
                                   <FormLabel>Verification Code</FormLabel>
-                                  <Input
-                                      value={code}
-                                      onChange={(e) => setCode(e.target.value)}
-                                      name="code"
-                                      endDecorator={
-                                          <Button
-                                              size="sm"
-                                              onClick={handleSendCode}
-                                              disabled={codeSending || !email}
-                                          >
-                                              {codeSending ? 'Sending...' : 'Send Code'}
-                                          </Button>
-                                      }
-                                  />
+                                  <Box sx={{ display: 'flex', gap: 1 }}>
+                                      <Input
+                                          placeholder="Enter verification code"
+                                          value={code}
+                                          onChange={(e) => setCode(e.target.value)}
+                                          sx={{ flex: 1 }}
+                                      />
+                                      <Button
+                                          variant="soft"
+                                          color="primary"
+                                          onClick={handleSendCode}
+                                          disabled={codeSending || !email}
+                                          endDecorator={codeSending ? '...' : null}
+                                      >
+                                          Send Code
+                                      </Button>
+                                  </Box>
                               </FormControl>
                           </>
                       )}
@@ -352,8 +339,11 @@ const LoginForm = ({ onLoginSuccess }) => {
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               endDecorator={
-                                  <IconButton onClick={togglePasswordVisibility}>
-                                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                  <IconButton
+                                      size="sm"
+                                      onClick={togglePasswordVisibility}
+                                  >
+                                      {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
                                   </IconButton>
                               }
                           />

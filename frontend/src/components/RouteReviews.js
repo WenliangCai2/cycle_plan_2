@@ -7,7 +7,7 @@ import { getUsernameById } from '../api/userApi';
 const { TextArea } = Input;
 
 /**
- * Review editor component - 修改为适应透明背景的样式
+ * Review editor component - Adapted to fit transparent background style
  */
 const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRating, username }) => (
   <div>
@@ -195,7 +195,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     }
   };
 
-  // 透明卡片样式
+  // Transparent card style
   const transparentCardStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(5px)',
@@ -204,7 +204,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     overflow: 'hidden'
   };
 
-  // 透明Card头部样式
+  // Transparent Card header style
   const cardHeaderStyle = {
     backgroundColor: 'rgba(46, 125, 50, 0.05)',
     color: 'white',

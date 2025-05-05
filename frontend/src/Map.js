@@ -33,7 +33,7 @@ const Map = (props) => {
     const createPOIControlPanel = () => {
         const controlContainer = document.createElement('div');
         controlContainer.className = 'poi-control-panel';
-        // 添加定位样式，使控制面板位于左下角
+        // Add positioning style to place the control panel in the bottom left corner
         controlContainer.style.top = 'auto';
         controlContainer.style.right = 'auto';
         controlContainer.style.bottom = '16px';
@@ -61,17 +61,17 @@ const Map = (props) => {
         // Add to the map container
         mapRef.current.appendChild(controlContainer);
         
-        // 防止点击控制面板时触发地图点击事件
+        // Prevent map click events when interacting with the control panel
         controlContainer.addEventListener('click', (e) => {
             e.stopPropagation();
         });
         
-        // 防止触摸事件传播
+        // Prevent touch events from propagating
         controlContainer.addEventListener('touchstart', (e) => {
             e.stopPropagation();
         });
         
-        // 防止鼠标事件传播
+        // Prevent mouse events from propagating
         controlContainer.addEventListener('mousedown', (e) => {
             e.stopPropagation();
         });
@@ -167,6 +167,20 @@ const Map = (props) => {
             // Add new bubble
             ui.current.addBubble(infoBubble);
             console.log("Simple info bubble added");
+            
+            // Add event listener for the close button
+            setTimeout(() => {
+                const closeButton = document.querySelector('.info-bubble-close-btn');
+                if (closeButton) {
+                    closeButton.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent event from bubbling up
+                        // Close the bubble by removing it from the UI
+                        ui.current.getBubbles().forEach(bubble => {
+                            ui.current.removeBubble(bubble);
+                        });
+                    });
+                }
+            }, 10); // Small timeout to ensure the button is in the DOM
         } catch (e) {
             console.error("Error showing marker info bubble:", e);
         }
@@ -253,8 +267,6 @@ const Map = (props) => {
                 console.error('[ERROR] POI fetch failed:', error);
             });
     };
-
-
 
     // Find POIs along the route within the specified radius
     const findPOIsAlongRoute = () => {
@@ -389,7 +401,7 @@ const Map = (props) => {
                         });
                         
                         // Add custom data for the point (could be name if available)
-                        const pointName = point.name || (index === 0 ? "起点" : (index === waypoints.length - 1 ? "终点" : `途经点 ${index}`));
+                        const pointName = point.name || (index === 0 ? "Starting point" : (index === waypoints.length - 1 ? "End point" : `Waypoint ${index}`));
                         marker.setData({
                             name: pointName,
                             title: pointName,

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRouteById } from '../api/routeApi';
+import { getRouteById, shareRoute, updateRouteVisibility } from '../api/routeApi';
 import { getRouteVotes } from '../api/voteApi';
-import ShareRoute from './ShareRoute';
 import RouteReviews from './RouteReviews';
 import RouteVote from './RouteVote';
 import Map from '../Map';
-// 导入背景图片
+// Import background image
 import backgroundImage from '../images/AdobeStock_1092964965_Preview.jpeg';
 
 // Material UI imports
@@ -29,7 +28,8 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  Backdrop
+  Backdrop,
+  Switch
 } from '@mui/material';
 
 // Material UI icons
@@ -145,8 +145,8 @@ const RouteDetail = () => {
         
         if (data.success) {
           console.log('Route deleted successfully');
-          // Navigate back to home page
-          navigate('/');
+          // Navigate back to main page instead of root
+          navigate('/mainPage');
         } else {
           console.error(`Delete failed: ${data.message || 'Unknown error'}`);
         }
@@ -200,11 +200,11 @@ const RouteDetail = () => {
         }
       } else {
         console.error('Failed to get route details');
-        navigate('/');
+        navigate('/mainPage');
       }
     } catch (error) {
       console.error('Failed to get route details:', error);
-      navigate('/');
+      navigate('/mainPage');
     } finally {
       setLoading(false);
     }
@@ -219,6 +219,18 @@ const RouteDetail = () => {
     }
   }, [routeId]);
 
+  // Handle URL fragment jump to comments section
+  useEffect(() => {
+    if (window.location.hash === '#comments') {
+      setTimeout(() => {
+        const commentsSection = document.getElementById('comments');
+        if (commentsSection) {
+          commentsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 500); // Give time for page to load
+    }
+  }, [route]);
+  
   // Handling vote changes
   const handleVoteChange = async () => {
     console.log('Voting has changed, get the latest voting data');
@@ -324,7 +336,13 @@ const RouteDetail = () => {
   return (
     <Box sx={backgroundStyle}>
       <Container maxWidth="xl">
-        <Paper elevation={0} sx={overlayStyle}>
+        <Paper elevation={0} sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '12px',
+          padding: '30px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          backdropFilter: 'blur(5px)'
+        }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
             <Button 
               variant="outlined"
@@ -358,7 +376,10 @@ const RouteDetail = () => {
           
           <Card sx={{ 
             mb: 4, 
-            ...cardStyle
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            backdropFilter: 'blur(5px)',
+            backgroundColor: 'transparent'
           }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -375,32 +396,87 @@ const RouteDetail = () => {
                     sx={{ mr: 1 }}
                   />
 
-                  <Box onClick={(e) => e.stopPropagation()}>
-                    <ShareRoute
-                        routeId={routeId}
-                        isPublic={route.is_public}
-                        onVisibilityChange={isOwner ? handleVisibilityChange : null}  // 仅拥有者可变更可见性
-                        isOwner={isOwner}  // ✅ 传递 isOwner 给 ShareRoute 控制开关是否可编辑
-                    />
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Button 
+                      variant="contained" 
+                      startIcon={<ShareIcon />} 
+                      onClick={async () => {
+                        try {
+                          // Call share API and get share link
+                          const response = await shareRoute(routeId);
+                          
+                          // Use modern Web API sharing feature (if browser supports)
+                          if (navigator.share) {
+                            await navigator.share({
+                              title: route.name,
+                              text: `Check out this cycling route: ${route.name}`,
+                              url: response.share_url
+                            });
+                          } else {
+                            // Copy link to clipboard
+                            navigator.clipboard.writeText(response.share_url)
+                              .then(() => {
+                                alert('Link copied to clipboard!');
+                              })
+                              .catch(err => {
+                                console.error('Unable to copy link:', err);
+                              });
+                          }
+                          
+                          // Local update share count
+                          setRoute(prev => ({
+                            ...prev,
+                            share_count: (prev.share_count || 0) + 1
+                          }));
+                        } catch (error) {
+                          console.error('Sharing route failed:', error);
+                          alert('Sharing failed, please try again later.');
+                        }
+                      }}
+                      sx={{ mr: 1, borderRadius: '20px' }}
+                      size="small"
+                    >
+                      Share
+                    </Button>
+                    
+                    {isOwner && (
+                      <Switch
+                        checked={route.is_public}
+                        onChange={async (event) => {
+                          const isPublic = event.target.checked;
+                          try {
+                            await updateRouteVisibility(routeId, isPublic);
+                            handleVisibilityChange(isPublic);
+                          } catch (error) {
+                            console.error('Updating visibility failed:', error);
+                            alert('Updating visibility failed, please try again later.');
+                          }
+                        }}
+                        icon={<LockOutlined />}
+                        checkedIcon={<PublicOutlined />}
+                        color="primary"
+                      />
+                    )}
                   </Box>
                 </Box>
               </Box>
               
-              {/* 修改布局: 将地图和统计数据放在水平Flex容器中 */}
+              {/* Modify layout: Map and statistics data in horizontal Flex container */}
               <Box sx={{ 
                 display: 'flex', 
                 flexDirection: { xs: 'column', md: 'row' }, 
                 gap: 3,
                 mb: 3
               }}>
-                {/* Map Section - 左侧占据更多空间 */}
+                {/* Map Section - Left occupies more space */}
                 <Box sx={{ 
                   height: '70vh',
                   borderRadius: '8px', 
                   overflow: 'hidden',
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                   flexGrow: 1,
-                  width: { xs: '100%', md: '70%' }
+                  width: { xs: '100%', md: '70%' },
+                  backgroundColor: 'transparent'
                 }}>
                   {route.locations && Array.isArray(route.locations) && route.locations.length > 0 ? (
                     <Map 
@@ -418,7 +494,7 @@ const RouteDetail = () => {
                       alignItems: 'center', 
                       justifyContent: 'center', 
                       height: '100%',
-                      bgcolor: 'rgba(0, 0, 0, 0.03)'
+                      backgroundColor: 'transparent'
                     }}>
                       <Typography color="text.secondary">
                         Cannot display route map - missing location data
@@ -427,7 +503,7 @@ const RouteDetail = () => {
                   )}
                 </Box>
                 
-                {/* Stats Section - 右侧 */}
+                {/* Stats Section - Right */}
                 <Box sx={{ 
                   width: { xs: '100%', md: '30%' },
                   display: 'flex',
@@ -435,17 +511,19 @@ const RouteDetail = () => {
                 }}>
                   {/* Route Statistics */}
                   <Box sx={{ 
-                    ...sectionStyle, 
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    mb: 2
+                    mb: 2,
+                    borderRadius: '8px',
+                    padding: '16px',
+                    backgroundColor: 'transparent'
                   }}>
                     <Typography variant="h6" gutterBottom fontWeight="bold" color="black">
                       Route Statistics
                     </Typography>
                     
-                    {/* 竖向排列的统计信息 */}
+                    {/* Vertical arranged statistics information */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <Box sx={{ 
                         display: 'flex', 
@@ -530,7 +608,9 @@ const RouteDetail = () => {
                   {/* Vote Section */}
                   {route.is_public && (
                     <Box sx={{ 
-                      ...sectionStyle,
+                      borderRadius: '8px',
+                      padding: '16px',
+                      backgroundColor: 'transparent',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
@@ -558,7 +638,9 @@ const RouteDetail = () => {
           
           <Divider sx={{ my: 4, backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
           
-          <RouteReviews routeId={routeId} currentUserId={currentUserId} />
+          <Box id="comments">
+            <RouteReviews routeId={routeId} currentUserId={currentUserId} />
+          </Box>
         </Paper>
       </Container>
       

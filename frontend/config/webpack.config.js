@@ -191,7 +191,7 @@ module.exports = function (webpackEnv) {
   return {
     target: ['browserslist'],
     node: {
-      global: false // 允许 Webpack 提供全局的 global 变量
+      global: false // Allow Webpack to provide global variable
     },
     // Webpack noise constrained to errors and warnings
     stats: 'errors-warnings',

@@ -185,7 +185,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       }
     } catch (error) {
       console.error('Vote error:', error);
-      // 如果发生错误，恢复之前的状态
+      // If an error occurs, restore the previous state
       setUpvotes(previousState.upvotes);
       setDownvotes(previousState.downvotes);
       setVoteScore(previousState.voteScore);
