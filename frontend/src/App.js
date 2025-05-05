@@ -75,7 +75,7 @@ import MainPage from './components/MainPage';
 // Import background image
 import backgroundImage from './images/AdobeStock_1291231442_Preview.jpeg';
 
-const apikey = '8kY020yd2oSy4ivQKBlxf_a5Bhtizzu0A9deSUakGz8';
+const apikey = 'RbwdXOHKZRDRFw0gKovUUV-eU_TiBYTSGrpRXbkv6MY';
 
 // Default position if geolocation fails (Newcastle)
 const defaultPosition = { lat: 54.9783, lng: -1.6174 };

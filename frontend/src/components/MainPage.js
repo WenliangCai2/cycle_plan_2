@@ -1,5 +1,5 @@
 // MainPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -36,7 +36,7 @@ import Map from '../Map';
 import { createCustomPoint, getCustomPoints } from '../api/customPointApi';
 import { createRoute, getRoutes, uploadRouteImage } from '../api/routeApi';
 
-const apikey = '8kY020yd2oSy4ivQKBlxf_a5Bhtizzu0A9deSUakGz8';
+const apikey = 'RbwdXOHKZRDRFw0gKovUUV-eU_TiBYTSGrpRXbkv6MY';
 
 // Default position if geolocation fails (Newcastle)
 const defaultPosition = { lat: 54.9783, lng: -1.6174 };
@@ -72,6 +72,9 @@ const MainPage = () => {
     open: false,
     routeId: null
   });
+
+  // Add a ref to the Map component
+  const mapRef = useRef();
 
   // Get user's current location
   useEffect(() => {
@@ -975,6 +978,17 @@ const MainPage = () => {
     );
   };
 
+  // Modify the "Clear Selection" button event handler
+  const handleClearSelection = () => {
+    // Clear the selected restaurants
+    setSelectedRestaurants([]);
+    
+    // Call the clearAllSelections method of the Map component
+    if (mapRef.current) {
+      mapRef.current.clearAllSelections();
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
       {/* Left Panel */}
@@ -1169,7 +1183,7 @@ const MainPage = () => {
           variant="outlined"
           color="warning"
           startIcon={<ClearIcon />}
-          onClick={() => setSelectedRestaurants([])}
+          onClick={handleClearSelection}
           fullWidth
           sx={{ 
             mb: 3,
@@ -1306,6 +1320,7 @@ const MainPage = () => {
           }
         }}>
           <Map
+            ref={mapRef}
             apikey={apikey}
             userPosition={userPosition}
             selectedLocations={selectedRestaurants}

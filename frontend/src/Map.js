@@ -1,22 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import H from '@here/maps-api-for-javascript';
 import { getCustomMarkerIcon } from './components/CustomMapMarker';
 import { createInfoBubbleContent } from './components/CustomInfoBubble';
 import './components/MapStyles.css';
 import { CircularProgress, Typography } from '@mui/material';
  
-const Map = (props) => {
+const Map = forwardRef((props, ref) => {
     const mapRef = useRef(null);
     const map = useRef(null);
     const platform = useRef(null);
     const routePolyline = useRef(null);
     const ui = useRef(null);
     const [poiMarkers, setPoiMarkers] = useState([]);
-    const [poiRadius, setPoiRadius] = useState(500);
+    const [poiRadius, setPoiRadius] = useState(10);
     const [poiCategory, setPoiCategory] = useState('restaurants');
     const [processedPOIs, setProcessedPOIs] = useState(new Set());
 
     const { apikey, userPosition, selectedLocations, onMapClick, customPoints, restaurantList, loading } = props;
+ 
+
+    useImperativeHandle(ref, () => ({
+        clearAllSelections: () => {
+            clearAllSelections();
+        }
+    }));
  
     // POI categories mapping
     const poiCategories = {
@@ -44,7 +51,7 @@ const Map = (props) => {
                 <h3>Points of Interest</h3>
                 <div>
                     <label for="poi-radius">Radius (meters): <span id="radius-value">${poiRadius}</span></label>
-                    <input type="range" id="poi-radius" min="100" max="2000" step="100" value="${poiRadius}">
+                    <input type="range" id="poi-radius" min="10" max="2000" step="10" value="${poiRadius}">
                 </div>
                 <div>
                     <label for="poi-category">Category:</label>
@@ -95,10 +102,33 @@ const Map = (props) => {
     // Clear existing POI markers
     const clearPOIs = () => {
         if (map.current && poiMarkers.length > 0) {
-            poiMarkers.forEach(marker => map.current.removeObject(marker));
+            // 获取当前地图上存在的所有对象
+            const currentMapObjects = map.current.getObjects();
+            
+            // 只移除那些仍然存在于地图上的标记
+            poiMarkers.forEach(marker => {
+                if (currentMapObjects.indexOf(marker) !== -1) {
+                    map.current.removeObject(marker);
+                }
+            });
+            
             setPoiMarkers([]);
             setProcessedPOIs(new Set());
         }
+    };
+ 
+    // clean
+    const clearRoute = () => {
+        if (map.current && routePolyline.current) {
+            map.current.removeObject(routePolyline.current);
+            routePolyline.current = null;
+        }
+    };
+ 
+    // 添加清除所有选择的功能（POI和路线）
+    const clearAllSelections = () => {
+        clearPOIs();
+        clearRoute();
     };
  
     // Get color for POI category
@@ -118,8 +148,10 @@ const Map = (props) => {
  
     // Create a custom icon for POI based on category
     const createPOIIcon = (category) => {
-        const iconColor = getCategoryColor(category);
-        return getCustomMarkerIcon(H, iconColor, 'star', { size: 24 });
+        // Use blue color for POI markers to differentiate from custom points
+        const iconColor = '#4A90E2'; // Blue color
+        // Use pin instead of star
+        return getCustomMarkerIcon(H, iconColor, 'pin', { size: 28 });
     };
  
     // Show info bubble for any marker when clicked
@@ -130,8 +162,9 @@ const Map = (props) => {
             const markerData = marker.getData();
             console.log("Marker data:", markerData);
             
-            // Extract only the name, simplify data processing
+            // Extract data
             let title = '';
+            let website = '';
             
             if (typeof markerData === 'string') {
                 // Simple string data
@@ -139,18 +172,34 @@ const Map = (props) => {
             } else if (markerData && typeof markerData === 'object') {
                 // Object data - extract name/title
                 title = markerData.name || markerData.title || 'Unnamed Location';
+                
+                // Extract website if exists
+                website = markerData.website || markerData.url || '';
             } else {
                 // Default value
                 title = 'Location Point';
             }
             
-            // Prepare only the name data
-            const bubbleData = { title: title };
+            // Prepare data for info bubble
+            const bubbleData = { 
+                title: title,
+                website: website
+            };
             
-            console.log("Creating simple info bubble with title:", title);
+            console.log("Creating info bubble with title:", title);
             
-            // Create and show the bubble
-            const bubbleContent = createInfoBubbleContent(bubbleData);
+            // Create custom content with proper styling for the close button
+            let bubbleContent;
+            if (website) {
+                bubbleContent = `
+                <div class="info-bubble-content" style="position: relative; padding: 10px; min-width: 150px;">
+                    <div class="info-title" style="margin-right: 20px; font-weight: bold;">${title}</div>
+                    <a href="${website}" target="_blank" class="info-website" style="color: #4A90E2; text-decoration: underline;">Official Website</a>
+                    <div class="info-bubble-close-btn" style="position: absolute; top: 5px; right: 8px; cursor: pointer; font-size: 16px; line-height: 16px;">×</div>
+                </div>`;
+            } else {
+                bubbleContent = createInfoBubbleContent(bubbleData);
+            }
             
             // Create info bubble - set small offset to position bubble closer to marker
             const infoBubble = new H.ui.InfoBubble(position, {
@@ -166,7 +215,7 @@ const Map = (props) => {
             
             // Add new bubble
             ui.current.addBubble(infoBubble);
-            console.log("Simple info bubble added");
+            console.log("Info bubble added");
             
             // Add event listener for the close button
             setTimeout(() => {
@@ -214,6 +263,9 @@ const Map = (props) => {
                     };
                     // Use custom info bubble function
                     showMarkerInfoBubble(poiMarker, position);
+                    
+                    // Prevent automatic map center reset and event propagation
+                    evt.stopPropagation();
                 } catch (e) {
                     console.error("Error showing POI info bubble:", e);
                 }
@@ -228,46 +280,6 @@ const Map = (props) => {
         }
     };
  
-    // Search for POIs near a specific location
-    const searchPOIsNearby = (lat, lng, radius, category) => {
-        const query = encodeURIComponent(category);
-        const url = `https://discover.search.hereapi.com/v1/discover?at=${lat},${lng}&q=${query}&limit=10&apikey=${apikey}`;
-
-        console.log('[DEBUG] POI request URL:', url);
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                console.log('[DEBUG] POI response:', data);
-
-                if (data.items && Array.isArray(data.items)) {
-                    const newProcessedPOIs = new Set(processedPOIs);
-
-                    data.items.forEach(poi => {
-                        if (!newProcessedPOIs.has(poi.id)) {
-                            newProcessedPOIs.add(poi.id);
-
-                            const poiData = {
-                                id: poi.id,
-                                position: [poi.position.lat, poi.position.lng],
-                                title: poi.title,
-                                name: poi.title,
-                            };
-
-                            addPOIMarker(poiData);
-                        }
-                    });
-
-                    setProcessedPOIs(newProcessedPOIs);
-                } else {
-                    console.warn('[WARN] No POIs found for query:', query);
-                }
-            })
-            .catch(error => {
-                console.error('[ERROR] POI fetch failed:', error);
-            });
-    };
-
     // Find POIs along the route within the specified radius
     const findPOIsAlongRoute = () => {
         clearPOIs();
@@ -276,37 +288,118 @@ const Map = (props) => {
             console.warn('No route available to search for POIs');
             return;
         }
-       
-        // Get route geometry for sampling points
+        
+        // Get route geometry
         const routeGeometry = routePolyline.current.getGeometry();
         if (!routeGeometry || typeof routeGeometry.extractPoints !== 'function') {
             console.warn('Invalid route geometry');
             return;
         }
-       
+        
         const routePoints = routeGeometry.extractPoints();
         if (!routePoints || routePoints.getPointCount() === 0) {
             console.warn('No points in route geometry');
             return;
         }
-       
-        // Sample points along the route for POI search
-        // Take points at regular intervals to avoid too many API calls
-        const sampleStep = Math.max(1, Math.floor(routePoints.getPointCount() / 10));
-        const searchPoints = [];
-       
+        
+        // Create a route corridor string for the API
+        // Format: lat,lng;lat,lng;lat,lng...
+        const sampleStep = Math.max(1, Math.floor(routePoints.getPointCount() / 20));
+        let corridorPoints = [];
+        
         for (let i = 0; i < routePoints.getPointCount(); i += sampleStep) {
-            searchPoints.push(routePoints.get(i));
+            const point = routePoints.get(i);
+            corridorPoints.push(`${point.lat},${point.lng}`);
         }
-       
-        // Ensure the last point is included
-        if (searchPoints[searchPoints.length - 1] !== routePoints.get(routePoints.getPointCount() - 1)) {
-            searchPoints.push(routePoints.get(routePoints.getPointCount() - 1));
+        
+        // Make sure to include the last point
+        const lastPoint = routePoints.get(routePoints.getPointCount() - 1);
+        if (!corridorPoints.includes(`${lastPoint.lat},${lastPoint.lng}`)) {
+            corridorPoints.push(`${lastPoint.lat},${lastPoint.lng}`);
         }
-       
-        // Search for POIs around each sampled point
-        searchPoints.forEach(point => {
-            searchPOIsNearby(point.lat, point.lng, poiRadius, poiCategory);
+        
+        const corridor = corridorPoints.join(';');
+        console.log("Route corridor:", corridor);
+        
+        // Search for POIs along the corridor
+        searchPOIsAlongCorridor(corridor, poiRadius);
+    };
+    
+    // New function to search POIs along a route corridor
+    const searchPOIsAlongCorridor = (corridor, radius) => {
+        console.log(`[DEBUG] Starting corridor search with radius: ${radius}m and corridor length: ${corridor.split(';').length} points`);
+        
+        // HERE API category codes for better results
+        const categoryMap = {
+            "restaurant": "100-1000",
+            "shopping": "200-0000",
+            "sights-museums": "300-0000",
+            "leisure-outdoor": "550-0000"
+        };
+        
+        Object.entries(categoryMap).forEach(([category, categoryCode]) => {
+            // Using correct browse endpoint with categoryId instead of categories text
+            const url = `https://browse.search.hereapi.com/v1/browse?route=${corridor}&radius=${radius}&in=circle:${corridor.split(';')[0]}&categoryIds=${categoryCode}&limit=50&apikey=${apikey}`;
+            
+            console.log(`[DEBUG] POI corridor request URL for ${category}:`, url);
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error(`[ERROR] HTTP error ${response.status} for ${category}`);
+                        return response.text().then(text => {
+                            console.error(`[ERROR] Response body: ${text}`);
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`[DEBUG] POI corridor response for ${category}:`, data);
+                    
+                    if (data.items && Array.isArray(data.items)) {
+                        console.log(`[INFO] Found ${data.items.length} POIs for category ${category}`);
+                        const newProcessedPOIs = new Set(processedPOIs);
+                        
+                        data.items.forEach(poi => {
+                            if (!newProcessedPOIs.has(poi.id)) {
+                                newProcessedPOIs.add(poi.id);
+                                
+                                // Extract website information
+                                let website = '';
+                                if (poi.contacts && poi.contacts.length > 0) {
+                                    const contact = poi.contacts[0];
+                                    if (contact.www && contact.www.length > 0) {
+                                        website = contact.www[0].value;
+                                    }
+                                }
+                                
+                                const poiData = {
+                                    id: poi.id,
+                                    position: [poi.position.lat, poi.position.lng],
+                                    title: poi.title,
+                                    name: poi.title,
+                                    website: website,
+                                    isPOI: true, // Mark as POI point
+                                    category: category
+                                };
+                                
+                                console.log(`[DEBUG] Adding POI: ${poi.title} at ${poi.position.lat},${poi.position.lng}`);
+                                
+                                // Set current category for icon color
+                                setPoiCategory(category);
+                                addPOIMarker(poiData);
+                            }
+                        });
+                        
+                        setProcessedPOIs(newProcessedPOIs);
+                    } else {
+                        console.warn(`[WARN] No POIs found for category: ${category}`);
+                    }
+                })
+                .catch(error => {
+                    console.error(`[ERROR] POI corridor fetch failed for ${category}:`, error);
+                });
         });
     };
  
@@ -360,10 +453,13 @@ const Map = (props) => {
                 .map(point => `${point.lat},${point.lng}`)
                 .join('!');
         }
+
+        console.log('[DEBUG] Calculating route with params:', routingParams);
  
         // Call routing service
         router.calculateRoute(routingParams, (response) => {
             if (response.routes && response.routes.length > 0) {
+                console.log('[DEBUG] Route calculation succeeded');
                 const sections = response.routes[0].sections;
                 const lineStrings = sections.map(section =>
                     H.geo.LineString.fromFlexiblePolyline(section.polyline)
@@ -384,8 +480,12 @@ const Map = (props) => {
  
                 // Clear all objects on the map
                 map.removeObjects(map.getObjects());
+                
+                // Reset POI markers
+                setPoiMarkers([]);
+                setProcessedPOIs(new Set());
  
-                // Add route folds
+                // Add route to the map
                 map.addObject(newRoutePolyline);
  
                 console.log("Adding waypoint markers for route");
@@ -495,8 +595,117 @@ const Map = (props) => {
                 // Adjust the map perspective to include all marks and routes
                 map.getViewModel().setLookAtData({ bounds });
  
-                // Find POIs along the route
-                findPOIsAlongRoute();
+                // Search for POIs along the route using HERE Search Service API
+                const searchService = platform.getSearchService();
+                if (searchService) {
+                    console.log("[DEBUG] Using HERE Search Service for route corridor POI search");
+                    
+                    // Extract route coordinates for the corridor
+                    const routePoints = [];
+                    // 增加步长，减少采样点数量
+                    const step = Math.max(1, Math.floor(lineStrings[0].getPointCount() / 5));
+                    
+                    for (let i = 0; i < lineStrings.length; i++) {
+                        const lineString = lineStrings[i];
+                        for (let j = 0; j < lineString.getPointCount(); j += step) {
+                            const point = lineString.extractPoint(j);
+                            routePoints.push(point);
+                        }
+                    }
+                    
+                    // Make sure to include the last point
+                    if (lineStrings.length > 0) {
+                        const lastLineString = lineStrings[lineStrings.length - 1];
+                        const lastPoint = lastLineString.extractPoint(lastLineString.getPointCount() - 1);
+                        routePoints.push(lastPoint);
+                    }
+                    
+                    // Define the categories for our POI search
+                    const categories = [
+                        { name: "restaurant", categoryId: "100-1000" },
+                        { name: "shopping", categoryId: "200-0000" },
+                        { name: "sights-museums", categoryId: "300-0000" },
+                        { name: "leisure-outdoor", categoryId: "550-0000" }
+                    ];
+                    
+                    // 大幅减少API请求数量 - 只使用路线上的少数几个点
+                    // 选择最多4个点进行搜索，这将大大减少API请求的数量
+                    const maxPoints = 4;
+                    const selectedPoints = [];
+                    
+                    if (routePoints.length <= maxPoints) {
+                        selectedPoints.push(...routePoints);
+                    } else {
+                        // 选择路线上均匀分布的点
+                        const interval = Math.floor(routePoints.length / maxPoints);
+                        for (let i = 0; i < maxPoints - 1; i++) {
+                            selectedPoints.push(routePoints[i * interval]);
+                        }
+                        // 确保包含终点
+                        selectedPoints.push(routePoints[routePoints.length - 1]);
+                    }
+                    
+                    // 使用选定的点进行POI搜索
+                    selectedPoints.forEach((point, index) => {
+                        categories.forEach(category => {
+                            const params = {
+                                at: `${point.lat},${point.lng}`,
+                                limit: 5,
+                                categories: [category.categoryId],
+                                radius: poiRadius
+                            };
+                            
+                            console.log(`[DEBUG] Searching for ${category.name} POIs at ${point.lat},${point.lng}`);
+                            
+                            searchService.browse(
+                                params,
+                                (result) => {
+                                    if (result.items && result.items.length > 0) {
+                                        console.log(`[DEBUG] Found ${result.items.length} ${category.name} POIs`);
+                                        
+                                        const newProcessedPOIs = new Set(processedPOIs);
+                                        
+                                        result.items.forEach(poi => {
+                                            if (!newProcessedPOIs.has(poi.id)) {
+                                                newProcessedPOIs.add(poi.id);
+                                                
+                                                let website = '';
+                                                if (poi.contacts && poi.contacts.length > 0) {
+                                                    const contact = poi.contacts[0];
+                                                    if (contact.www && contact.www.length > 0) {
+                                                        website = contact.www[0].value;
+                                                    }
+                                                }
+                                                
+                                                const poiData = {
+                                                    id: poi.id,
+                                                    position: [poi.position.lat, poi.position.lng],
+                                                    title: poi.title,
+                                                    name: poi.title,
+                                                    website: website,
+                                                    isPOI: true,
+                                                    category: category.name
+                                                };
+                                                
+                                                // Set the category for icon color
+                                                setPoiCategory(category.name);
+                                                addPOIMarker(poiData);
+                                            }
+                                        });
+                                        
+                                        setProcessedPOIs(newProcessedPOIs);
+                                    }
+                                },
+                                (error) => {
+                                    console.error(`[ERROR] Search service error for ${category.name}:`, error);
+                                }
+                            );
+                        });
+                    });
+                } else {
+                    console.error("[ERROR] HERE Search Service is not available");
+                }
+
             } else {
                 console.error('No routes found in the response:', response);
             }
@@ -541,19 +750,88 @@ const Map = (props) => {
             new H.mapevents.Behavior(new H.mapevents.MapEvents(newMap));
             ui.current = H.ui.UI.createDefault(newMap, defaultLayers);
             map.current = newMap;
- 
-            // Create the POI control panel after map initialization
-            setTimeout(() => {
-                createPOIControlPanel();
-            }, 500);
+
+            // Make sure to add user position marker immediately after map initialization
+            if (userPosition) {
+                try {
+                    const userMarker = new H.map.Marker(userPosition, {
+                        icon: getCustomMarkerIcon(H, 'red', 'pin', { 
+                            size: 32, 
+                            label: 'My Current Location' 
+                        })
+                    });
+                    userMarker.setData({
+                        name: "My Current Location",
+                        title: "My Current Location"
+                    });
+                    // Add tap event to user marker
+                    userMarker.addEventListener('tap', (evt) => {
+                        const position = {
+                            lat: userMarker.getGeometry().lat,
+                            lng: userMarker.getGeometry().lng
+                        };
+                        showMarkerInfoBubble(userMarker, position);
+                    });
+                    map.current.addObject(userMarker);
+                    console.log("User marker added during initialization");
+                } catch (e) {
+                    console.error("Error adding user position marker:", e);
+                }
+            }
+
+            // Add custom points immediately after initialization
+            console.log("Adding custom points during initialization", customPoints);
+            if (customPoints && Array.isArray(customPoints) && customPoints.length > 0) {
+                customPoints.forEach(point => {
+                    try {
+                        if (point && point.location && typeof point.location.lat === 'number' && typeof point.location.lng === 'number') {
+                            console.log("Adding custom point during initialization:", point);
+                            const marker = new H.map.Marker(point.location, {
+                                icon: getCustomMarkerIcon(H, '#9c27b0', 'pin', { 
+                                    size: 32, 
+                                    label: point.name || '' 
+                                })
+                            });
+                            // Set full point data including name
+                            marker.setData(point);
+                            // Add tap event to marker
+                            marker.addEventListener('tap', (evt) => {
+                                const position = {
+                                    lat: marker.getGeometry().lat,
+                                    lng: marker.getGeometry().lng
+                                };
+                                showMarkerInfoBubble(marker, position);
+                            });
+                            map.current.addObject(marker);
+                            console.log("Custom point marker added during initialization");
+                        } else {
+                            console.warn("Invalid point or location during initialization:", point);
+                        }
+                    } catch (e) {
+                        console.error("Error adding custom point during initialization:", e);
+                    }
+                });
+            }
         } else {
-            // If map exists but user position changed, update the center
-            map.current.setCenter(userPosition);
-        }
- 
-        // Clear all objects on the map
-        if (map.current) {
-            map.current.removeObjects(map.current.getObjects());
+            // Save current POI markers for later re-addition
+            const currentPOIMarkers = [...poiMarkers];
+            
+            // Clear all existing POI markers from the map and state
+            clearPOIs();
+            
+            // Only update center when necessary, not on every re-render
+            if (map.current.getCenter().lat !== userPosition.lat || 
+                map.current.getCenter().lng !== userPosition.lng) {
+                // Update map center position
+                map.current.setCenter(userPosition);
+            }
+            
+            // Only remove non-POI objects (keep POI markers until route changes)
+            const nonPOIObjects = map.current.getObjects().filter(obj => 
+                !poiMarkers.includes(obj) && 
+                !(obj === routePolyline.current)
+            );
+            map.current.removeObjects(nonPOIObjects);
             
             console.log("Adding user position marker");
             // Add user position marker with a custom icon and label
@@ -576,9 +854,13 @@ const Map = (props) => {
                             lng: userMarker.getGeometry().lng
                         };
                         showMarkerInfoBubble(userMarker, position);
+                        
+                        // Prevent automatic map center reset
+                        evt.stopPropagation();
                     });
                     map.current.addObject(userMarker);
                     console.log("User marker added");
+                    
                 } catch (e) {
                     console.error("Error adding user position marker:", e);
                 }
@@ -654,10 +936,10 @@ const Map = (props) => {
  
         // Clean up function to remove POI controls when component unmounts
         return () => {
-            const controlPanel = document.querySelector('.poi-control-panel');
-            if (controlPanel) {
-                controlPanel.remove();
-            }
+            // const controlPanel = document.querySelector('.poi-control-panel');
+            // if (controlPanel) {
+            //     controlPanel.remove();
+            // }
         };
     }, [apikey, userPosition, selectedLocations, customPoints, onMapClick, restaurantList, loading]);
  
@@ -673,6 +955,6 @@ const Map = (props) => {
             )}
         </div>
     );
-};
+});
  
 export default Map;
