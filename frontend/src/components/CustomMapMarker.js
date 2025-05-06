@@ -1,3 +1,19 @@
+/**
+ * Custom Map Marker Component
+ * =========================
+ * This module creates custom markers for the HERE Maps API, with
+ * different styles, colors, and types for various location types.
+ * 
+ * Features:
+ * - Multiple marker styles (pin, circular, pulse, flag, star)
+ * - Customizable colors for different location types
+ * - Optional labels for markers
+ * - Material UI design integration
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -9,9 +25,16 @@ import { SvgIcon, Box, Badge, Avatar, Tooltip } from '@mui/material';
 
 /**
  * Creates SVG markup for different marker styles using Material UI designs
+ * 
+ * Process:
+ * 1. Generates SVG markup based on specified marker type
+ * 2. Applies custom colors and sizing
+ * 3. Adds optional labels to the marker
+ * 
  * @param {string} color - The color for the marker
  * @param {string} type - The type of marker to create (pin, dot, etc.)
  * @param {number} size - The size of the marker
+ * @param {string} label - Optional label text to display with the marker
  * @returns {string} SVG markup for the marker
  */
 export const createMarkerIcon = (color = '#3f51b5', type = 'pin', size = 32, label = '') => {
@@ -55,6 +78,11 @@ export const createMarkerIcon = (color = '#3f51b5', type = 'pin', size = 32, lab
 
 /**
  * Creates material icon for H.HERE maps
+ * 
+ * Process:
+ * 1. Generates SVG markup using createMarkerIcon
+ * 2. Creates H.map.Icon instance with proper anchor point
+ * 
  * @param {Object} H - H.HERE maps API object
  * @param {Object} options - Options for the marker
  * @returns {Object} H.map.Icon instance
@@ -75,6 +103,12 @@ export const createMaterialIcon = (H, options = {}) => {
 
 /**
  * Creates a custom styled marker
+ * 
+ * Process:
+ * 1. Determines correct anchor point based on marker type
+ * 2. Creates marker icon with appropriate styling
+ * 
+ * @param {Object} H - H.HERE maps API object
  * @param {string} color - The color for the marker
  * @param {string} type - The type of marker (pin, circular, etc.)
  * @param {Object} props - Additional properties
@@ -110,4 +144,4 @@ export default {
   createMarkerIcon,
   createMaterialIcon,
   getCustomMarkerIcon
-}; 
+};

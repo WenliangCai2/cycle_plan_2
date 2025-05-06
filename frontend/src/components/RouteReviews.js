@@ -1,3 +1,23 @@
+/**
+ * Route Reviews Component
+ * =======================
+ * This module provides a review system for routes with star ratings, comments,
+ * and user interaction features.
+ * 
+ * Features:
+ * - Star rating system with half-star precision
+ * - Review comments with user attribution
+ * - Review deletion for authenticated users
+ * - Pagination for efficient navigation of reviews
+ * - Average rating display with review count
+ * - Transparent UI design with glass-like styling
+ * - Responsive layout for different device sizes
+ * - Date formatting for review timestamps
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState, useEffect } from 'react';
 import { List, Avatar, Form, Button, Input, Rate, Card, message, Pagination, Tooltip, Popconfirm } from 'antd';
 import { UserOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -7,7 +27,25 @@ import { getUsernameById } from '../api/userApi';
 const { TextArea } = Input;
 
 /**
- * Review editor component - Adapted to fit transparent background style
+ * Review editor component for creating new reviews
+ * 
+ * Process:
+ * 1. Displays star rating input for route evaluation
+ * 2. Provides text area for review content
+ * 3. Includes submission button with loading state
+ * 4. Adapts styling to match transparent background
+ * 
+ * Args:
+ *   onChange (Function): Handler for content text changes
+ *   onSubmit (Function): Handler for form submission
+ *   submitting (Boolean): Loading state for submission
+ *   content (String): Current review text value
+ *   rating (Number): Current star rating value
+ *   setRating (Function): Handler for rating changes
+ *   username (String): Username of the reviewer
+ * 
+ * Returns:
+ *   Review editor form with rating and text input
  */
 const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRating, username }) => (
   <div>
@@ -45,28 +83,58 @@ const ReviewEditor = ({ onChange, onSubmit, submitting, content, rating, setRati
 );
 
 /**
- * Route reviews component
- * @param {Object} props
- * @param {string} props.routeId - Route ID
- * @param {string} props.currentUserId - Current logged in user ID
+ * Route reviews component for displaying and managing reviews
+ * 
+ * Process:
+ * 1. Fetches reviews from backend API
+ * 2. Handles review creation and deletion
+ * 3. Manages pagination for multiple reviews
+ * 4. Displays average rating and review count
+ * 5. Shows user information with avatar and username
+ * 
+ * Args:
+ *   routeId (String/Number): ID of the route being reviewed
+ *   currentUserId (String/Number): ID of the current logged-in user
+ * 
+ * Returns:
+ *   Complete review system with creation form and list
  */
 const RouteReviews = ({ routeId, currentUserId }) => {
+  // State for reviews data and UI management
   const [reviews, setReviews] = useState([]);
   const [content, setContent] = useState('');
   const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Pagination state
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0
   });
+  
+  // Rating statistics state
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  
+  // User information state
   const [usernames, setUsernames] = useState({}); // Map of user IDs to usernames
   const currentUsername = localStorage.getItem('username') || 'You';
 
-  // Get reviews list
+  /**
+   * Fetch reviews for the current route
+   * 
+   * Process:
+   * 1. Sets loading state for UI feedback
+   * 2. Requests reviews from backend API with pagination
+   * 3. Updates reviews state and rating statistics
+   * 4. Fetches usernames for review authors
+   * 5. Handles errors with appropriate messages
+   * 
+   * Args:
+   *   page (Number): Page number to fetch, defaults to 1
+   */
   const fetchReviews = async (page = 1) => {
     setLoading(true);
     
@@ -74,6 +142,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
       const response = await getReviews(routeId, page, pagination.pageSize);
       
       if (response.success) {
+        // Update reviews and rating data
         setReviews(response.reviews);
         setAvgRating(response.avg_rating);
         setReviewCount(response.review_count);
@@ -91,12 +160,13 @@ const RouteReviews = ({ routeId, currentUserId }) => {
           if (!usernames[userId]) {
             try {
               if (userId === currentUserId) {
+                // Use local username for current user
                 setUsernames(prev => ({
                   ...prev,
                   [userId]: currentUsername
                 }));
               } else {
-
+                // Fetch username from API for other users
                 const response = await getUsernameById(userId);
                 setUsernames(prev => ({
                   ...prev,
@@ -122,20 +192,44 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     }
   };
 
-  // Load reviews after component mount
+  /**
+   * Load reviews after component mount
+   * 
+   * Process:
+   * 1. Triggers fetchReviews when routeId is available
+   * 2. Only runs once on initial render
+   */
   useEffect(() => {
     if (routeId) {
       fetchReviews();
     }
   }, [routeId]);
 
-  // Handle content change
+  /**
+   * Handle content change for review input
+   * 
+   * Process:
+   * 1. Updates content state with new input value
+   * 
+   * Args:
+   *   e (Event): Change event from input field
+   */
   const handleContentChange = (e) => {
     setContent(e.target.value);
   };
 
-  // Submit review
+  /**
+   * Submit a new review
+   * 
+   * Process:
+   * 1. Validates required content
+   * 2. Sets submitting state for UI feedback
+   * 3. Sends review data to backend API
+   * 4. Resets form and reloads reviews on success
+   * 5. Handles errors with appropriate messages
+   */
   const handleSubmit = async () => {
+    // Validate input
     if (!content.trim()) {
       message.error('Please enter a comment');
       return;
@@ -144,14 +238,15 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     setSubmitting(true);
     
     try {
+      // Create review with API
       const response = await createReview(routeId, {
         content: content,
         rating: rating
       });
       
       if (response.success) {
+        // Reset form and reload reviews
         setContent('');
-        // Reload reviews list
         fetchReviews();
         message.success('Comment posted successfully');
       }
@@ -163,7 +258,17 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     }
   };
 
-  // Delete review
+  /**
+   * Delete a review
+   * 
+   * Process:
+   * 1. Sends delete request to backend API
+   * 2. Reloads reviews list on success
+   * 3. Handles errors with appropriate messages
+   * 
+   * Args:
+   *   reviewId (String/Number): ID of the review to delete
+   */
   const handleDeleteReview = async (reviewId) => {
     try {
       const response = await deleteReview(routeId, reviewId);
@@ -179,12 +284,33 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     }
   };
 
-  // Handle pagination change
+  /**
+   * Handle pagination change
+   * 
+   * Process:
+   * 1. Fetches reviews for the selected page
+   * 
+   * Args:
+   *   page (Number): Page number to load
+   */
   const handlePageChange = (page) => {
     fetchReviews(page);
   };
 
-  // Format date
+  /**
+   * Format date string for display
+   * 
+   * Process:
+   * 1. Creates Date object from string
+   * 2. Formats to locale string representation
+   * 3. Handles errors with fallback to original string
+   * 
+   * Args:
+   *   dateString (String): Date string to format
+   * 
+   * Returns:
+   *   Formatted date string
+   */
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -195,7 +321,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     }
   };
 
-  // Transparent card style
+  // Style definitions for UI components
   const transparentCardStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(5px)',
@@ -204,7 +330,6 @@ const RouteReviews = ({ routeId, currentUserId }) => {
     overflow: 'hidden'
   };
 
-  // Transparent Card header style
   const cardHeaderStyle = {
     backgroundColor: 'rgba(46, 125, 50, 0.05)',
     color: 'white',
@@ -218,6 +343,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
         title={
           <div style={{ display: 'flex', alignItems: 'center', color: 'white' }}>
             <span>Comments</span>
+            {/* Display average rating if reviews exist */}
             {reviewCount > 0 && (
               <span style={{ marginLeft: '10px' }}>
                 <Rate disabled allowHalf value={avgRating} style={{ fontSize: '16px' }} />
@@ -231,6 +357,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
         headStyle={cardHeaderStyle}
         bodyStyle={{ padding: '16px', color: 'black' }}
       >
+        {/* Review editor for authenticated users */}
         {currentUserId && (
           <Card 
             className="review-editor"
@@ -263,6 +390,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
           </Card>
         )}
 
+        {/* Reviews list or empty state */}
         {reviews.length > 0 ? (
           <List
             className="comment-list"
@@ -286,6 +414,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
                       <span>{item.username || usernames[item.user_id] || item.user_id}</span>
                       <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem' }}>
                         {formatDate(item.created_at)}
+                        {/* Delete button for review owner */}
                         {currentUserId === item.user_id && (
                           <Popconfirm
                             title="Are you sure you want to delete this comment?"
@@ -323,6 +452,7 @@ const RouteReviews = ({ routeId, currentUserId }) => {
           </div>
         )}
 
+        {/* Pagination controls */}
         {reviews.length > 0 && (
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
             <Pagination
@@ -343,4 +473,4 @@ const RouteReviews = ({ routeId, currentUserId }) => {
   );
 };
 
-export default RouteReviews; 
+export default RouteReviews;

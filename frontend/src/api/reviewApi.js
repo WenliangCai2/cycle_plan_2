@@ -1,5 +1,17 @@
 /**
- * Review related API services
+ * Review API Service
+ * ===============
+ * This module handles all review-related API requests including
+ * creating, retrieving, and managing reviews for cycling routes.
+ * 
+ * Features:
+ * - Create and update reviews with ratings
+ * - Retrieve reviews with pagination
+ * - Delete reviews with proper authorization
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
  */
 import axios from 'axios';
 
@@ -14,7 +26,14 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add authentication token
+/**
+ * Request interceptor to include authentication token
+ * 
+ * Process:
+ * 1. Retrieves token from localStorage if present
+ * 2. Adds token to request headers for authentication
+ * 3. Handles errors in the request preparation phase
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -30,6 +49,11 @@ api.interceptors.request.use(
 
 /**
  * Create or update a review for a route
+ * 
+ * Process:
+ * 1. Sends review content and rating to backend
+ * 2. Handles updating existing review if user has already reviewed
+ * 
  * @param {string} routeId - Route ID
  * @param {Object} review - Review data
  * @param {string} review.content - Review content
@@ -47,6 +71,11 @@ export const createReview = async (routeId, review) => {
 
 /**
  * Get reviews for a route
+ * 
+ * Process:
+ * 1. Retrieves reviews with pagination parameters
+ * 2. Returns formatted review list with user information
+ * 
  * @param {string} routeId - Route ID
  * @param {number} page - Page number
  * @param {number} limit - Number of reviews per page
@@ -63,6 +92,11 @@ export const getReviews = async (routeId, page = 1, limit = 20) => {
 
 /**
  * Delete a review
+ * 
+ * Process:
+ * 1. Sends delete request to the backend
+ * 2. Handles authentication and authorization through interceptor
+ * 
  * @param {string} routeId - Route ID
  * @param {string} reviewId - Review ID
  * @returns {Promise} - Promise containing deletion result
@@ -80,4 +114,4 @@ export default {
   createReview,
   getReviews,
   deleteReview,
-}; 
+};

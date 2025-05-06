@@ -1,3 +1,25 @@
+/**
+ * Public Routes List Component
+ * =======================
+ * This module displays a list of publicly shared routes with sorting, filtering, 
+ * and interactive features for user engagement.
+ * 
+ * Features:
+ * - Route cards with image thumbnails and metadata
+ * - Sorting options by votes, shares, and ratings
+ * - Pagination for efficient navigation
+ * - Background image with glass-like UI elements
+ * - Route deletion for route owners
+ * - Sharing functionality with web share API support
+ * - Rating display with star visualization
+ * - Loading states with visual feedback
+ * - Empty state handling with user guidance
+ * - Responsive grid layout for different devices
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPublicRoutes, shareRoute } from '../api/routeApi';
@@ -45,7 +67,7 @@ import {
 // Components
 import RouteVote from './RouteVote';
 
-// Background image array - using uploaded images (as default fallback images)
+// Default background images as fallbacks for routes without custom images
 const BACKGROUND_IMAGES = [
   '/images/backgrounds/WechatIMG831.jpeg',
   '/images/backgrounds/WechatIMG832.jpeg',
@@ -55,41 +77,73 @@ const BACKGROUND_IMAGES = [
 ];
 
 /**
- * Public routes list component with Material UI styling
+ * Public routes list component that displays all publicly shared cycling routes
+ * 
+ * Process:
+ * 1. Fetches public routes with pagination and sorting
+ * 2. Displays routes in responsive card grid layout
+ * 3. Enables interactive features like voting and sharing
+ * 4. Provides sorting controls for different metrics
+ * 5. Handles route deletion for authorized users
+ * 6. Manages loading and empty states appropriately
+ * 
+ * Returns:
+ *   Public routes page with interactive route cards and controls
  */
 const PublicRoutesList = () => {
+  // State for routes data and UI management
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  // Pagination state
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 12,
-    total: 0
+    pageSize: 12,  // Number of routes per page
+    total: 0       // Total number of routes (from API)
   });
+  
+  // Sorting state and deletion handling
   const [sortBy, setSortBy] = useState('vote_score');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [routeToDelete, setRouteToDelete] = useState(null);
   
-  // Instead of using Redux, check for token directly
+  // Authentication state - Using localStorage instead of Redux
   const isAuthenticated = !!localStorage.getItem('token');
   const currentUserId = localStorage.getItem('userId');
   
+  // Navigation hook
   const navigate = useNavigate();
 
-  // Get public routes list
+  /**
+   * Fetch public routes with sorting and pagination
+   * 
+   * Process:
+   * 1. Shows loading indicator during fetch
+   * 2. Requests routes from backend API with parameters
+   * 3. Processes routes to add default images if needed
+   * 4. Updates component state with retrieved data
+   * 5. Handles error conditions with proper logging
+   * 
+   * Args:
+   *   page (Number): Page number to fetch
+   *   sort (String): Sort parameter for ordering results
+   */
   const fetchPublicRoutes = async (page = 1, sort = sortBy) => {
     setLoading(true);
     
     try {
+      // Call API with pagination and sorting parameters
       const response = await getPublicRoutes(page, pagination.pageSize, sort, 'desc');
       
       if (response.success) {
-        // Add default background image for routes without images
+        // Process routes to ensure all have background images
         const routesWithImages = response.routes.map((route, index) => ({
           ...route,
-          // If the route has no image, use default image, otherwise use the user-uploaded image
+          // If route has no image, use default fallback from array
           backgroundImage: route.image_url || BACKGROUND_IMAGES[index % BACKGROUND_IMAGES.length]
         }));
         
+        // Update routes state and pagination data
         setRoutes(routesWithImages);
         setPagination({
           ...pagination,
@@ -102,21 +156,49 @@ const PublicRoutesList = () => {
     } catch (error) {
       console.error('Failed to get public routes:', error);
     } finally {
+      // Always disable loading state when finished
       setLoading(false);
     }
   };
 
-  // Load public routes after component mount
+  /**
+   * Load public routes after component mount
+   * 
+   * Process:
+   * 1. Calls fetchPublicRoutes with default parameters
+   * 2. Only runs once on component initialization
+   */
   useEffect(() => {
     fetchPublicRoutes();
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle pagination change
+  /**
+   * Handle pagination control changes
+   * 
+   * Process:
+   * 1. Receives new page number from pagination component
+   * 2. Fetches routes for selected page
+   * 
+   * Args:
+   *   event (Event): Change event from pagination control
+   *   page (Number): New page number to load
+   */
   const handlePageChange = (event, page) => {
     fetchPublicRoutes(page);
   };
 
-  // Handle sort change
+  /**
+   * Handle sorting parameter changes
+   * 
+   * Process:
+   * 1. Validates new sort parameter is not null
+   * 2. Updates state with selected sorting criteria
+   * 3. Refetches routes with new sorting parameter
+   * 
+   * Args:
+   *   event (Event): Change event from toggle button group
+   *   newSortBy (String): New sorting parameter
+   */
   const handleSortChange = (event, newSortBy) => {
     if (newSortBy !== null) {
       setSortBy(newSortBy);
@@ -124,26 +206,62 @@ const PublicRoutesList = () => {
     }
   };
 
-  // View route details
+  /**
+   * Navigate to route details page
+   * 
+   * Process:
+   * 1. Uses React Router to navigate to route details
+   * 2. Constructs URL with route ID parameter
+   * 
+   * Args:
+   *   routeId (String/Number): ID of route to view
+   */
   const viewRouteDetails = (routeId) => {
     navigate(`/routes/${routeId}`);
   };
   
-  // Open delete dialog
+  /**
+   * Open delete confirmation dialog
+   * 
+   * Process:
+   * 1. Stops event propagation to prevent card click
+   * 2. Sets route ID to delete state
+   * 3. Opens confirmation dialog
+   * 
+   * Args:
+   *   routeId (String/Number): ID of route to delete
+   *   e (Event): Click event to prevent propagation
+   */
   const openDeleteDialog = (routeId, e) => {
     e.stopPropagation();
     setRouteToDelete(routeId);
     setDeleteDialogOpen(true);
   };
   
-  // Close delete dialog
+  /**
+   * Close delete confirmation dialog
+   * 
+   * Process:
+   * 1. Closes dialog by updating state
+   * 2. Clears route to delete state
+   */
   const closeDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setRouteToDelete(null);
   };
   
-  // Delete route (only for route owners)
+  /**
+   * Delete route after confirmation
+   * 
+   * Process:
+   * 1. Verifies authentication and route ID
+   * 2. Sends deletion request to backend API
+   * 3. Updates routes list upon successful deletion
+   * 4. Handles different error conditions
+   * 5. Closes dialog regardless of outcome
+   */
   const handleDeleteRoute = async () => {
+    // Verify requirements are met
     if (!isAuthenticated || !routeToDelete) {
       closeDeleteDialog();
       return;
@@ -153,7 +271,7 @@ const PublicRoutesList = () => {
       // Get token for authentication
       const token = localStorage.getItem('token');
       
-      // Use direct fetch API
+      // Send deletion request to API
       const response = await fetch(
         `http://localhost:5000/api/routes/${routeToDelete}`, 
         {
@@ -169,13 +287,14 @@ const PublicRoutesList = () => {
         const data = await response.json();
         
         if (data.success) {
-          // Remove route from state
+          // Remove deleted route from state
           setRoutes(routes.filter(route => route.route_id !== routeToDelete));
           console.log('Route deleted successfully');
         } else {
           console.error(`Delete failed: ${data.message || 'Unknown error'}`);
         }
       } else {
+        // Handle specific error cases
         if (response.status === 403) {
           console.error('You can only delete your own routes');
         } else {
@@ -185,10 +304,12 @@ const PublicRoutesList = () => {
     } catch (error) {
       console.error('Error deleting route:', error);
     } finally {
+      // Always close dialog when finished
       closeDeleteDialog();
     }
   };
 
+  // Style definitions for background and overlay
   const backgroundStyle = {
     backgroundImage: `url(${backgroundImage})`,
     backgroundSize: 'cover',
@@ -211,6 +332,7 @@ const PublicRoutesList = () => {
     <Box sx={backgroundStyle}>
       <Container maxWidth="xl">
         <Paper elevation={0} sx={overlayStyle}>
+          {/* Header with title and back button */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
             <Button 
               variant="outlined"
@@ -230,6 +352,7 @@ const PublicRoutesList = () => {
             <Box /> {/* Empty box for flex spacing */}
           </Box>
           
+          {/* Sorting controls */}
           <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
             <ToggleButtonGroup
               value={sortBy}
@@ -264,6 +387,7 @@ const PublicRoutesList = () => {
             </ToggleButtonGroup>
           </Box>
           
+          {/* Loading indicator */}
           <Backdrop
             sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
             open={loading}
@@ -271,8 +395,10 @@ const PublicRoutesList = () => {
             <CircularProgress color="inherit" />
           </Backdrop>
           
+          {/* Routes grid or empty state */}
           {routes.length > 0 ? (
             <>
+              {/* Routes grid */}
               <Grid container spacing={3} justifyContent="center">
                 {routes.map(route => (
                   <Grid item xs={12} sm={6} md={4} key={route.route_id}>
@@ -293,7 +419,7 @@ const PublicRoutesList = () => {
                       }}
                       onClick={() => viewRouteDetails(route.route_id)}
                     >
-                      {/* Add background image */}
+                      {/* Route image */}
                       <CardMedia
                         component="img"
                         height="160"
@@ -302,7 +428,9 @@ const PublicRoutesList = () => {
                         sx={{ objectFit: 'cover' }}
                       />
                       
+                      {/* Route content */}
                       <CardContent sx={{ flexGrow: 1 }}>
+                        {/* Title and delete button (if owner) */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                           <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', color: 'black' }}>
                             {route.name}
@@ -319,6 +447,7 @@ const PublicRoutesList = () => {
                           )}
                         </Box>
                         
+                        {/* Rating display */}
                         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
                           <Rating 
                             value={route.avg_rating || 0} 
@@ -332,17 +461,20 @@ const PublicRoutesList = () => {
                         </Box>
                         
                         <Divider sx={{ my: 1.5, backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
-                        
                       </CardContent>
                       
+                      {/* Action buttons */}
                       <CardActions sx={{ justifyContent: 'space-between', p: 2, bgcolor: 'rgba(46, 125, 50, 0)' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {/* Vote button */}
                           <Box onClick={(e) => e.stopPropagation()}>
                             <RouteVote 
                               routeId={route.route_id} 
                               isAuthenticated={isAuthenticated}
                             />
                           </Box>
+                          
+                          {/* Share button */}
                           <Box onClick={(e) => e.stopPropagation()}>
                             <Chip
                               icon={<ShareOutlined fontSize="small" />}
@@ -364,7 +496,7 @@ const PublicRoutesList = () => {
                                       url: response.share_url
                                     });
                                   } else {
-                                    // If Web sharing API is not available, redirect to share page
+                                    // Fallback for browsers without Web Share API
                                     navigate(`/routes/${route.route_id}`);
                                     
                                     // Copy link to clipboard
@@ -377,7 +509,7 @@ const PublicRoutesList = () => {
                                       });
                                   }
                                   
-                                  // Local update share count
+                                  // Update share count locally
                                   setRoutes(prevRoutes => 
                                     prevRoutes.map(r => 
                                       r.route_id === route.route_id 
@@ -392,6 +524,8 @@ const PublicRoutesList = () => {
                               }}
                             />
                           </Box>
+                          
+                          {/* Comments button */}
                           <Chip
                             icon={<CommentOutlined fontSize="small" />}
                             label={route.review_count || 0}
@@ -410,6 +544,7 @@ const PublicRoutesList = () => {
                 ))}
               </Grid>
               
+              {/* Pagination controls */}
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <Pagination
                   count={Math.ceil(pagination.total / pagination.pageSize)}
@@ -432,6 +567,7 @@ const PublicRoutesList = () => {
               </Box>
             </>
           ) : (
+            // Empty state display when no routes found
             <Box sx={{ 
               textAlign: 'center', 
               py: 8, 

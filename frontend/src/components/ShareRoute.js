@@ -1,3 +1,23 @@
+/**
+ * Share Route Component
+ * =======================
+ * This module provides a sharing interface for routes with social media integration
+ * and route visibility controls.
+ * 
+ * Features:
+ * - Route sharing to popular social platforms (Facebook, Twitter, WhatsApp)
+ * - Direct link copying to clipboard
+ * - Public/private visibility toggle for route owners
+ * - Modal dialog for sharing options
+ * - Notification system for user feedback
+ * - Loading state management with visual indicators
+ * - Responsive design for various device sizes
+ * - Context-sensitive controls based on user ownership
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState } from 'react';
 import { shareRoute, updateRouteVisibility } from '../api/routeApi';
 
@@ -34,30 +54,54 @@ import {
 } from '@mui/icons-material';
 
 /**
- * Route sharing component with Material UI styling
- * @param {Object} props
- * @param {string} props.routeId - Route ID
- * @param {boolean} props.isPublic - Whether the route is public
- * @param {function} props.onVisibilityChange - Callback after visibility change
- * @param {boolean} props.hideControls - Whether to hide the public/private controls
+ * Route sharing component with social media integration
+ * 
+ * Process:
+ * 1. Provides share button and public/private toggle
+ * 2. Displays sharing modal with social media options
+ * 3. Handles route visibility changes for owners
+ * 4. Manages clipboard operations for direct link sharing
+ * 5. Shows notifications for user actions
+ * 
+ * Args:
+ *   routeId (String/Number): ID of the route to share
+ *   isPublic (Boolean): Whether the route is currently public
+ *   onVisibilityChange (Function): Callback after visibility change
+ *   isOwner (Boolean): Whether current user owns the route
+ *   hideControls (Boolean): Whether to hide visibility controls
+ *   id (String): Optional ID for the share button element
+ * 
+ * Returns:
+ *   Sharing interface with button, modal, and notifications
  */
 const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideControls, id }) => {
+  // State for modal and sharing
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shareLinks, setShareLinks] = useState(null);
   const [loading, setLoading] = useState(false);
   const [publicSwitch, setPublicSwitch] = useState(isPublic);
+  
+  // Notification state
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success'
   });
 
-  // Open share modal
+  /**
+   * Open sharing modal and fetch sharing links
+   * 
+   * Process:
+   * 1. Sets loading state for UI feedback
+   * 2. Fetches sharing links from API
+   * 3. Opens modal with sharing options
+   * 4. Handles errors with notifications
+   */
   const showModal = async () => {
     setLoading(true);
     
     try {
-      // Get share links
+      // Get share links from API
       const response = await shareRoute(routeId);
       setShareLinks({
         ...response.social_links,
@@ -76,17 +120,34 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
     }
   };
 
-  // Close share modal
+  /**
+   * Close sharing modal
+   * 
+   * Process:
+   * 1. Updates modal open state to close it
+   */
   const handleModalClose = () => {
     setIsModalOpen(false);
   };
 
-  // Close snackbar
+  /**
+   * Close notification snackbar
+   * 
+   * Process:
+   * 1. Updates snackbar state to close it
+   */
   const handleSnackbarClose = () => {
     setSnackbar({...snackbar, open: false});
   };
 
-  // Copy share link
+  /**
+   * Copy share link to clipboard
+   * 
+   * Process:
+   * 1. Verifies share links are available
+   * 2. Uses clipboard API to copy the URL
+   * 3. Shows success or error notification
+   */
   const copyShareLink = () => {
     if (!shareLinks) return;
     
@@ -108,25 +169,41 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
       });
   };
 
-  // Update route visibility
+  /**
+   * Update route visibility (public/private)
+   * 
+   * Process:
+   * 1. Gets new visibility state from event
+   * 2. Sets loading state for UI feedback
+   * 3. Sends update request to API
+   * 4. Updates local state and notifies parent
+   * 5. Handles errors with notifications
+   * 
+   * Args:
+   *   event (Event): Switch change event
+   */
   const handleVisibilityChange = async (event) => {
     const checked = event.target.checked;
     setLoading(true);
 
     try {
+      // Update visibility with API
       const result = await updateRouteVisibility(routeId, checked);
       setPublicSwitch(checked);
 
+      // Notify parent component if callback provided
       if (onVisibilityChange) {
         onVisibilityChange(checked);
       }
 
+      // Show success notification
       setSnackbar({
         open: true,
         message: checked ? 'Route is now public' : 'Route is now private',
         severity: 'success'
       });
     } catch (error) {
+      // Show error and revert state
       setSnackbar({
         open: true,
         message: 'Failed to update route visibility',
@@ -138,6 +215,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
     }
   };
 
+  // Style for social media icons
   const socialIconStyle = {
     width: 40,
     height: 40
@@ -145,6 +223,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
 
   return (
     <>
+      {/* Share button and visibility toggle */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Tooltip title="Share Route">
           <Button 
@@ -160,6 +239,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
           </Button>
         </Tooltip>
 
+        {/* Visibility toggle - only shown for route owners when not hidden */}
         {!hideControls && (
           <FormControlLabel
             control={
@@ -182,6 +262,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
         )}
       </Box>
 
+      {/* Share modal dialog */}
       <Dialog
         open={isModalOpen}
         onClose={handleModalClose}
@@ -203,7 +284,9 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
                 Choose a platform to share:
               </Typography>
               
+              {/* Social media sharing buttons */}
               <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
+                {/* Facebook */}
                 <Grid item>
                   <Tooltip title="Share to Facebook">
                     <IconButton
@@ -223,6 +306,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
                   </Tooltip>
                 </Grid>
                 
+                {/* Twitter */}
                 <Grid item>
                   <Tooltip title="Share to Twitter">
                     <IconButton
@@ -242,6 +326,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
                   </Tooltip>
                 </Grid>
                 
+                {/* WhatsApp */}
                 <Grid item>
                   <Tooltip title="Share to WhatsApp">
                     <IconButton
@@ -261,6 +346,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
                   </Tooltip>
                 </Grid>
                 
+                {/* Copy link button */}
                 <Grid item>
                   <Tooltip title="Copy Link">
                     <IconButton
@@ -278,6 +364,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
                 </Grid>
               </Grid>
               
+              {/* Direct link section */}
               <Typography variant="subtitle1" gutterBottom>
                 Share link:
               </Typography>
@@ -316,6 +403,7 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
         </DialogActions>
       </Dialog>
       
+      {/* Notification snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
@@ -335,4 +423,4 @@ const ShareRoute = ({ routeId, isPublic, onVisibilityChange, isOwner, hideContro
   );
 };
 
-export default ShareRoute; 
+export default ShareRoute;

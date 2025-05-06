@@ -1,33 +1,88 @@
+/**
+ * Restaurant List Component
+ * =======================
+ * This module provides a list display for restaurant/location points on the map,
+ * including selection and deletion functionality.
+ * 
+ * Features:
+ * - Visual display of location points with selection indicators
+ * - Special styling for current location and custom points
+ * - Point deletion functionality for custom points
+ * - Selection tracking synchronized with map
+ * - Empty state handling
+ * - Debug information for development
+ * - Interactive click handling for toggling selections
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React from 'react';
 
-// Restaurant physical components
+/**
+ * RestaurantEntity component for displaying a single location entry
+ * 
+ * Process:
+ * 1. Renders location information with visual indicators
+ * 2. Handles click events for selection
+ * 3. Provides delete functionality for custom points
+ * 4. Applies styling based on point type and selection state
+ * 
+ * Args:
+ *   data (Object): Location data with name, point_id and location properties
+ *   isSelected (Boolean): Whether this location is currently selected
+ *   onClickHandler (Function): Handler for click selection events
+ *   onDeleteHandler (Function): Handler for deletion events
+ * 
+ * Returns:
+ *   Single location list item with interactive controls
+ */
 function RestaurantEntity(props) {
     const { data, isSelected, onClickHandler, onDeleteHandler } = props;
     const isCurrentLocation = data.isCurrentLocation === true;
     const isCustomPoint = data.isCustom === true;
 
-    // Processing click event
+    /**
+     * Handle click selection event
+     * 
+     * Process:
+     * 1. Calls parent handler with location data
+     */
     const handleClick = () => {
         onClickHandler(data.location);
     };
 
-    // Handle delete button click
+    /**
+     * Handle delete button click for custom points
+     * 
+     * Process:
+     * 1. Prevents event propagation to parent elements
+     * 2. Validates point ID exists
+     * 3. Asks for user confirmation
+     * 4. Sends delete request to backend API
+     * 5. Handles response with appropriate feedback
+     * 
+     * Args:
+     *   e (Event): Click event object
+     */
     const handleDelete = async (e) => {
         e.stopPropagation(); // Prevent click event propagation
         console.log("Delete button clicked for:", data);
         
+        // Validate point_id exists
         if (!data.point_id) {
             console.error("Missing point_id for deletion. Data:", data);
             alert("Cannot delete this point: Missing point ID");
             return;
         }
         
+        // Get user confirmation
         if (window.confirm(`Are you sure you want to delete the point "${data.name}"?`)) {
             try {
                 // Get token for authentication
                 const token = localStorage.getItem('token');
                 
-                // Use direct fetch API
+                // Use direct fetch API to delete point
                 const response = await fetch(
                     `http://localhost:5000/api/custom-points/${data.point_id}`, 
                     {
@@ -39,6 +94,7 @@ function RestaurantEntity(props) {
                     }
                 );
                 
+                // Process response
                 if (response.ok) {
                     const responseData = await response.json();
                     if (responseData.success) {
@@ -58,7 +114,7 @@ function RestaurantEntity(props) {
         }
     };
 
-    // Style of restaurant entry
+    // Style of restaurant entry with conditional formatting
     const entryStyle = {
         display: "flex",
         justifyContent: "space-between",
@@ -75,6 +131,7 @@ function RestaurantEntity(props) {
         fontWeight: isCurrentLocation ? 'bold' : 'normal',
     };
 
+    // Style for delete button
     const deleteButtonStyle = {
         padding: '2px 6px',
         backgroundColor: '#dc3545',
@@ -87,7 +144,7 @@ function RestaurantEntity(props) {
         zIndex: 10
     };
 
-    // Debug information
+    // Debug logging for custom points
     if (isCustomPoint) {
         console.log(`Custom point '${data.name}': has point_id=${data.point_id ? 'YES' : 'NO'}`);
     }
@@ -116,12 +173,32 @@ function RestaurantEntity(props) {
     );
 }
 
+/**
+ * RestaurantList component for displaying a list of locations
+ * 
+ * Process:
+ * 1. Sorts location points with current location at top
+ * 2. Maps data to RestaurantEntity components
+ * 3. Tracks selection state synchronized with map
+ * 4. Handles empty state with helpful message
+ * 5. Provides debug information for development
+ * 
+ * Args:
+ *   list (Array): List of location points to display
+ *   selectedLocations (Array): Currently selected locations
+ *   onClickHandler (Function): Handler for location selection
+ *   onDeleteHandler (Function): Handler for point deletion
+ * 
+ * Returns:
+ *   List container with location entries and selection state
+ */
 function RestaurantList(props) {
     const { list, selectedLocations, onClickHandler, onDeleteHandler } = props;
 
+    // Debug logging
     console.log("Restaurant list received point list:", list);
     
-    // Check if delete handler exists
+    // Check if delete handler exists and warn if missing
     if (!onDeleteHandler) {
         console.warn("RestaurantList: No delete handler provided");
     }
@@ -133,7 +210,7 @@ function RestaurantList(props) {
         return 0;
     });
 
-    // Debug: Check custom points for point_id
+    // Debug: Count and log custom points information
     const customPointCount = sortedList.filter(item => item.isCustom).length;
     console.log(`Found ${customPointCount} custom points in list`);
     
@@ -143,6 +220,7 @@ function RestaurantList(props) {
         }
     });
 
+    // Create restaurant entries from sorted list with selection state
     const restaurantEntries = sortedList.map((entry) => {
         const isSelected = selectedLocations.some(
             (location) =>
@@ -171,7 +249,7 @@ function RestaurantList(props) {
         backgroundColor: '#f9f9f9',
     };
 
-    // Check if list is empty
+    // Handle empty list state
     if (list.length === 0) {
         return (
             <div id="restaurant-list" style={listStyle}>
@@ -182,6 +260,7 @@ function RestaurantList(props) {
         );
     }
 
+    // Render list with all entries
     return (
         <div id="restaurant-list" style={listStyle}>
             <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>

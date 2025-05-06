@@ -1,3 +1,21 @@
+/**
+ * Header Component
+ * =======================
+ * This module provides the application header with navigation and user controls.
+ * 
+ * Features:
+ * - Responsive layout with mobile drawer for smaller screens
+ * - User authentication status detection
+ * - Dynamic menu system based on authentication state
+ * - User profile dropdown menu
+ * - Notifications panel
+ * - Light/dark mode toggle
+ * - Mobile-friendly navigation drawer
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Drawer, Avatar, Dropdown, Badge, Space, Tooltip } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -12,41 +30,82 @@ import logo from '../assets/images/logo.png';
 import ColorModeToggle from './ColorModeToggle';
 import NotificationsPanel from './NotificationsPanel';
 
+// Extract Ant Design Header component for better readability
 const { Header: AntHeader } = Layout;
 
+/**
+ * Header component that displays the application navigation bar
+ * 
+ * Process:
+ * 1. Manages authentication state detection
+ * 2. Handles responsive layout for desktop and mobile
+ * 3. Provides user menu with profile and action links
+ * 4. Manages notification display
+ * 5. Handles user logout process
+ * 
+ * Returns:
+ *   The application header with navigation controls
+ */
 const Header = () => {
+  // State for mobile drawer visibility
   const [visible, setVisible] = useState(false);
+  
+  // State for notifications panel visibility
   const [notificationsVisible, setNotificationsVisible] = useState(false);
+  
+  // Router hooks for navigation and location tracking
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
+  // Get authentication state from Redux store with localStorage fallback
   const isAuthenticated = useSelector(state => state.user?.isAuthenticated) || !!localStorage.getItem('token');
+  
+  // Get current user data with fallbacks
   const currentUser = useSelector(state => state.user?.currentUser);
   const username = localStorage.getItem('username') || (currentUser?.username) || 'User';
   const userId = localStorage.getItem('userId') || (currentUser?.id);
   
-  // For notifications, if you have them
+  // Get notifications from Redux store with empty array fallback
   const notifications = useSelector(state => state.notifications?.items) || [];
+  
+  // Calculate unread notifications count
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // Reset drawer visibility on location change
+  /**
+   * Reset drawer visibility when route changes
+   * 
+   * Process:
+   * 1. Watches for changes in location pathname
+   * 2. Closes the mobile drawer when navigation occurs
+   */
   useEffect(() => {
     setVisible(false);
   }, [location.pathname]);
 
+  /**
+   * Handle user logout process
+   * 
+   * Process:
+   * 1. Dispatches logout action to Redux if available
+   * 2. Falls back to manual localStorage cleanup if Redux unavailable
+   * 3. Navigates user to home page after logout
+   */
   const handleLogout = () => {
     if (dispatch) {
+      // Use Redux action for logout if available
       dispatch(logout());
     } else {
-      // Fallback if redux is not available
+      // Fallback logout handling if Redux is not available
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
     }
+    // Navigate to home page after logout
     navigate('/');
   };
 
+  // User dropdown menu items configuration
   const userMenuItems = [
     {
       key: 'profile',
@@ -75,6 +134,7 @@ const Header = () => {
     }
   ];
 
+  // Main navigation items configuration
   const navItems = [
     {
       key: 'routes',
@@ -91,12 +151,14 @@ const Header = () => {
   return (
     <AntHeader className="app-header">
       <div className="header-content">
+        {/* Left side: Logo and desktop navigation */}
         <div className="header-left">
           <Link to="/" className="logo">
             <img src={logo} alt="Route Explorer" height="32" />
             <span className="logo-text">Route Explorer</span>
           </Link>
           
+          {/* Desktop navigation menu */}
           <div className="desktop-menu">
             <Menu 
               mode="horizontal" 
@@ -106,12 +168,16 @@ const Header = () => {
           </div>
         </div>
         
+        {/* Right side: User controls and mobile menu button */}
         <div className="header-right">
           <Space>
+            {/* Color mode toggle component */}
             <ColorModeToggle />
             
+            {/* Conditional rendering based on authentication status */}
             {isAuthenticated ? (
               <>
+                {/* Notifications button with unread badge */}
                 <Tooltip title="Notifications">
                   <Badge count={unreadCount} size="small">
                     <Button 
@@ -122,6 +188,7 @@ const Header = () => {
                   </Badge>
                 </Tooltip>
                 
+                {/* User profile dropdown */}
                 <Dropdown 
                   menu={{ items: userMenuItems }} 
                   trigger={['click']}
@@ -136,6 +203,7 @@ const Header = () => {
                 </Dropdown>
               </>
             ) : (
+              // Login/Register buttons for non-authenticated users
               <Space>
                 <Button type="link" onClick={() => navigate('/login')}>
                   Login
@@ -146,6 +214,7 @@ const Header = () => {
               </Space>
             )}
             
+            {/* Mobile menu button - only visible on small screens via CSS */}
             <Button 
               className="mobile-menu-button"
               icon={<MenuOutlined />} 
@@ -156,13 +225,14 @@ const Header = () => {
         </div>
       </div>
       
-      {/* Mobile Drawer */}
+      {/* Mobile navigation drawer */}
       <Drawer
         title="Menu"
         placement="right"
         onClose={() => setVisible(false)}
         open={visible}
       >
+        {/* Show user info if authenticated */}
         {isAuthenticated && (
           <div style={{ padding: '10px', marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
             <Avatar icon={<UserOutlined />} style={{ marginRight: '8px' }} />
@@ -170,15 +240,19 @@ const Header = () => {
           </div>
         )}
         
+        {/* Mobile navigation menu */}
         <Menu
           mode="vertical"
           selectedKeys={[location.pathname.split('/')[1] || 'home']}
           items={[
+            // Home item added for mobile menu
             {
               key: 'home',
               label: <Link to="/">Home</Link>
             },
+            // Include main navigation items
             ...navItems,
+            // Conditionally show user menu or login/register based on auth status
             ...(isAuthenticated 
               ? userMenuItems.filter(item => item.key !== 'logout')
               : [
@@ -194,6 +268,8 @@ const Header = () => {
             )
           ]}
         />
+        
+        {/* Show logout button at bottom of drawer if authenticated */}
         {isAuthenticated && (
           <Button 
             type="primary" 
@@ -207,7 +283,7 @@ const Header = () => {
         )}
       </Drawer>
       
-      {/* Notifications Panel */}
+      {/* Notifications panel - rendered but conditionally visible */}
       <NotificationsPanel
         visible={notificationsVisible}
         onClose={() => setNotificationsVisible(false)}
@@ -216,4 +292,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;

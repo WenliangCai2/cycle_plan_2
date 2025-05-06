@@ -1,3 +1,23 @@
+/**
+ * Route Vote Component
+ * =======================
+ * This module provides a voting system for routes with upvote and downvote
+ * functionality, including optimistic UI updates and server synchronization.
+ * 
+ * Features:
+ * - Upvote and downvote functionality
+ * - Vote count display with visual feedback
+ * - Optimistic UI updates for improved user experience
+ * - Server synchronization with error handling
+ * - Authentication state handling with login redirection
+ * - Loading states with visual indicators
+ * - Notification system for vote actions
+ * - Mobile-responsive design
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState, useEffect } from 'react';
 import { createOrUpdateVote, getRouteVotes } from '../api/voteApi';
 import { useNavigate } from 'react-router-dom';
@@ -21,17 +41,31 @@ import {
 } from '@mui/icons-material';
 
 /**
- * RouteVote Component - Allows users to upvote or downvote a route
- * @param {Object} props - Component props
- * @param {string} props.routeId - Route ID
- * @param {boolean} props.isAuthenticated - Whether the user is authenticated
- * @param {Function} props.onVoteChange - Optional callback when vote changes
+ * RouteVote component for upvoting and downvoting routes
+ * 
+ * Process:
+ * 1. Fetches current vote statistics for the route
+ * 2. Provides upvote and downvote buttons with counts
+ * 3. Handles vote actions with optimistic UI updates
+ * 4. Synchronizes with server and handles errors
+ * 5. Shows notifications for vote actions
+ * 
+ * Args:
+ *   routeId (String/Number): ID of the route to vote on
+ *   isAuthenticated (Boolean): Whether the user is authenticated
+ *   onVoteChange (Function): Optional callback when vote changes
+ * 
+ * Returns:
+ *   Vote interface with upvote/downvote buttons and counts
  */
 const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
+  // State for vote statistics
   const [upvotes, setUpvotes] = useState(0);
   const [downvotes, setDownvotes] = useState(0);
   const [voteScore, setVoteScore] = useState(0);
   const [userVote, setUserVote] = useState(null); // null = not voted, 1 = upvote, -1 = downvote
+  
+  // UI state
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -39,20 +73,35 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
     severity: 'success'
   });
   
+  // Navigation hook for redirects
   const navigate = useNavigate();
 
-  // Fetch votes on component mount
+  /**
+   * Fetch current vote statistics on component mount
+   * 
+   * Process:
+   * 1. Runs once when component mounts or routeId changes
+   * 2. Calls fetchVotes function to get data
+   */
   useEffect(() => {
     fetchVotes();
   }, [routeId]);
 
-  // Fetch vote statistics
+  /**
+   * Fetch vote statistics from server
+   * 
+   * Process:
+   * 1. Calls API to get vote data for the route
+   * 2. Updates state with received data
+   * 3. Handles errors with appropriate logging
+   */
   const fetchVotes = async () => {
     try {
       const response = await getRouteVotes(routeId);
       console.log('Fetched vote data:', response);
       
       if (response.success) {
+        // Update vote statistics state
         setUpvotes(response.upvotes || 0);
         setDownvotes(response.downvotes || 0);
         setVoteScore(response.vote_score || 0);
@@ -70,10 +119,26 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
     }
   };
 
+  /**
+   * Close notification snackbar
+   * 
+   * Process:
+   * 1. Updates snackbar state to close it
+   */
   const handleSnackbarClose = () => {
     setSnackbar({...snackbar, open: false});
   };
   
+  /**
+   * Show notification message
+   * 
+   * Process:
+   * 1. Sets snackbar state with message and severity
+   * 
+   * Args:
+   *   message (String): Message to display
+   *   severity (String): Message type (success, error, warning, info)
+   */
   const showMessage = (message, severity = 'success') => {
     setSnackbar({
       open: true,
@@ -82,15 +147,28 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
     });
   };
 
-  // Update the UI immediately and then send the request
+  /**
+   * Handle vote action with optimistic UI updates
+   * 
+   * Process:
+   * 1. Checks authentication status
+   * 2. Updates UI immediately for better UX
+   * 3. Sends request to server
+   * 4. Synchronizes with server response
+   * 5. Handles errors with UI rollback
+   * 
+   * Args:
+   *   voteType (Number): 1 for upvote, -1 for downvote
+   */
   const handleVoteWithOptimisticUI = async (voteType) => {
+    // Check authentication
     if (!isAuthenticated) {
       showMessage('Please login to vote', 'warning');
       navigate('/login');
       return;
     }
 
-    // Save the previous state to restore in case of error
+    // Save current state for rollback if needed
     const previousState = {
       upvotes,
       downvotes,
@@ -98,13 +176,13 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       userVote
     };
     
-    // Calculate the new voting status based on the previous voting status and the current voting operation
+    // Calculate new vote statistics based on action
     let newUpvotes = upvotes;
     let newDownvotes = downvotes;
     let newVoteScore = voteScore;
     let newUserVote = voteType;
     
-    // If you click on a vote of the same type that you have voted before, cancel the vote
+    // If clicking same vote type as current, cancel vote
     if (userVote === voteType) {
       if (voteType === 1) {
         newUpvotes -= 1;
@@ -114,7 +192,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       newVoteScore = newUpvotes - newDownvotes;
       newUserVote = null;
     } 
-    // Switch voting type if you have voted a different type before
+    // If switching vote type
     else if (userVote !== null && userVote !== voteType) {
       if (voteType === 1) {
         newUpvotes += 1;
@@ -126,7 +204,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       newVoteScore = newUpvotes - newDownvotes;
       newUserVote = voteType;
     } 
-    // Add a new vote if there was no previous vote
+    // If new vote
     else {
       if (voteType === 1) {
         newUpvotes += 1;
@@ -137,20 +215,20 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       newUserVote = voteType;
     }
     
-    // Update UI now
+    // Update UI immediately (optimistic update)
     setUpvotes(newUpvotes);
     setDownvotes(newDownvotes);
     setVoteScore(newVoteScore);
     setUserVote(newUserVote);
     
-    // Display a temporary success message
+    // Show feedback message
     if (userVote === voteType) {
       showMessage('The vote has been cancelled');
     } else {
       showMessage(voteType === 1 ? 'Liked' : 'Disliked');
     }
     
-    // Send a request to the server
+    // Send request to server
     setLoading(true);
     try {
       console.log(`Submitting vote: type=${voteType}`);
@@ -158,7 +236,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       console.log('Vote response:', response);
       
       if (response.success) {
-        // Update the UI with the actual data returned by the server
+        // Update state with actual server data
         setUpvotes(response.upvotes || 0);
         setDownvotes(response.downvotes || 0);
         setVoteScore(response.vote_score || 0);
@@ -171,12 +249,12 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
           userVote: response.user_vote
         });
         
-        // Notify the parent component that the vote has changed
+        // Notify parent component if callback provided
         if (onVoteChange) {
           onVoteChange();
         }
       } else {
-        // If the server fails to respond, restore the previous state
+        // Server error - rollback UI changes
         setUpvotes(previousState.upvotes);
         setDownvotes(previousState.downvotes);
         setVoteScore(previousState.voteScore);
@@ -185,7 +263,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
       }
     } catch (error) {
       console.error('Vote error:', error);
-      // If an error occurs, restore the previous state
+      // Exception - rollback UI changes
       setUpvotes(previousState.upvotes);
       setDownvotes(previousState.downvotes);
       setVoteScore(previousState.voteScore);
@@ -203,6 +281,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
         alignItems: 'center'
       }}
     >
+      {/* Upvote section */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Tooltip title={userVote === 1 ? "Remove like" : "Like"}>
           <Button
@@ -233,8 +312,10 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
         </Typography>
       </Box>
       
+      {/* Divider between vote buttons */}
       <Box sx={{ mx: 1, height: '20px', borderRight: '1px solid #ddd' }} />
       
+      {/* Downvote section */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Tooltip title={userVote === -1 ? "Remove dislike" : "Dislike"}>
           <Button
@@ -265,6 +346,7 @@ const RouteVote = ({ routeId, isAuthenticated, onVoteChange }) => {
         </Typography>
       </Box>
       
+      {/* Notification system */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

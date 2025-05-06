@@ -1,18 +1,41 @@
+/**
+ * App Component Styles
+ * =======================
+ * This stylesheet provides basic styling for the App component and its children,
+ * including default React animations and layout structures.
+ * 
+ * Features:
+ * - Default text alignment for App container
+ * - Logo styling and animation
+ * - Header layout with flexbox positioning
+ * - Default link color styling
+ * - Keyframe animation definition for logo rotation
+ * - Media query for reduced motion preferences
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
+
+/* Main App container styling with centered text */
 .App {
   text-align: center;
 }
 
+/* React logo styling with responsive height */
 .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
 
+/* Animation for logo, respecting user motion preferences */
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
 }
 
+/* App header layout with flexbox and default styling */
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -24,10 +47,12 @@
   color: white;
 }
 
+/* Link styling with React blue */
 .App-link {
   color: #61dafb;
 }
 
+/* Keyframe animation definition for logo rotation */
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

@@ -1,4 +1,22 @@
-// MainPage.js
+/**
+ * Main Page Component
+ * =======================
+ * This module serves as the primary interface for the route planning application,
+ * providing map integration, custom point creation, and route management.
+ * 
+ * Features:
+ * - Interactive map with HERE Maps API integration
+ * - User geolocation detection and tracking
+ * - Custom point creation and management
+ * - Route creation, saving, and loading
+ * - Route image upload functionality
+ * - User-friendly route management interface
+ * - Mobile-responsive design with adaptive controls
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -44,7 +62,20 @@ const defaultPosition = { lat: 54.9783, lng: -1.6174 };
 // Empty restaurant list - no predefined locations
 const restaurantList = [];
 
-// MainPage component - Contains the main application logic and UI
+/**
+ * Main page component that provides route planning functionality
+ * 
+ * Process:
+ * 1. Loads user's current geolocation
+ * 2. Retrieves user's saved custom points and routes
+ * 3. Manages custom point creation workflow
+ * 4. Handles route selection and management
+ * 5. Provides route saving with optional image upload
+ * 6. Implements route deletion with confirmation
+ * 
+ * Returns:
+ *   The main application interface with map and controls
+ */
 const MainPage = () => {
   const navigate = useNavigate();
   const [selectedRestaurants, setSelectedRestaurants] = useState([]);
@@ -111,7 +142,17 @@ const MainPage = () => {
     }
   }, []);
 
-  // Helper function to display notification messages
+    /**
+   * Display notification message to the user
+   * 
+   * Process:
+   * 1. Sets snackbar state with message and severity
+   * 2. Automatically dismisses after timeout
+   * 
+   * Args:
+   *   message (string): Message to display
+   *   severity (string): Message type (success, error, warning, info)
+   */
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({
       open: true,
@@ -225,7 +266,20 @@ const MainPage = () => {
     }
   };
 
-  // Save current route with image
+    /**
+   * Save current route with associated data
+   * 
+   * Process:
+   * 1. Validates required route information
+   * 2. Uploads route image if provided
+   * 3. Formats route data with proper structure
+   * 4. Submits to backend API
+   * 5. Updates saved routes list on success
+   * 6. Provides user feedback and resets form
+   * 
+   * Args:
+   *   e (Event): Form submission event
+   */
   const handleSaveRoute = async (e) => {
     e.preventDefault();
     if (routeName && selectedRestaurants.length > 0) {
@@ -316,7 +370,19 @@ const MainPage = () => {
     });
   };
 
-  // Handle custom point form submission
+    /**
+   * Handle custom point creation
+   * 
+   * Process:
+   * 1. Validates required form fields
+   * 2. Prepares point data with location and metadata
+   * 3. Submits to backend API
+   * 4. Updates UI with newly created point
+   * 5. Provides user feedback via notifications
+   * 
+   * Args:
+   *   e (Event): Form submission event
+   */
   const handleAddCustomPoint = async (e) => {
     e.preventDefault();
     console.log('Form submitted'); // Log submission
@@ -389,7 +455,16 @@ const MainPage = () => {
     });
   };
 
-  // Handle route deletion using fetch API instead of axios
+    /**
+   * Handle route deletion with confirmation
+   * 
+   * Process:
+   * 1. Verifies route ID is valid
+   * 2. Sends deletion request to backend API
+   * 3. Updates routes list upon successful deletion
+   * 4. Handles error states with appropriate messaging
+   * 5. Closes confirmation dialog
+   */
   const handleDeleteRoute = async () => {
     const routeId = deleteDialog.routeId;
     
@@ -451,8 +526,25 @@ const MainPage = () => {
   // Merge custom points and current location point
   const allPoints = [...customPoints, currentLocationPoint];
   
-  // Define SavedRoutesList and PaginatedPointsList components (internal components)
-  // SavedRoutesList component
+  /**
+   * Saved routes list component for displaying user's routes
+   * 
+   * Process:
+   * 1. Paginates routes for easier navigation
+   * 2. Provides expandable/collapsible interface
+   * 3. Displays route metadata and actions
+   * 4. Handles route loading and deletion triggers
+   * 
+   * Args:
+   *   routes (Array): List of saved routes
+   *   onLoadRoute (Function): Handler for loading routes
+   *   onViewDetails (Function): Handler for viewing route details
+   *   onDeleteDialog (Function): Handler for deletion confirmation
+   *   mapStyle (Boolean): Toggle for map overlay styling
+   * 
+   * Returns:
+   *   Paginated list of saved routes with controls
+   */
   const SavedRoutesList = ({ routes, onLoadRoute, onViewDetails, onDeleteDialog, mapStyle = false }) => {
     const [page, setPage] = useState(0);
     const [expanded, setExpanded] = useState(true);
@@ -650,7 +742,26 @@ const MainPage = () => {
     );
   };
 
-  // PaginatedPointsList component
+    /**
+   * Custom points list component with pagination
+   * 
+   * Process:
+   * 1. Paginates points for easier navigation
+   * 2. Provides expandable/collapsible interface
+   * 3. Handles point selection for route building
+   * 4. Manages custom point deletion
+   * 
+   * Args:
+   *   points (Array): List of available points
+   *   selectedLocations (Array): Currently selected points
+   *   onPointClick (Function): Handler for point selection
+   *   itemsPerPage (Number): Number of items per page
+   *   onDeletePoint (Function): Handler for point deletion
+   *   mapStyle (Boolean): Toggle for map overlay styling
+   * 
+   * Returns:
+   *   Paginated list of points with selection controls
+   */
   const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPerPage = 5, onDeletePoint, mapStyle = false }) => {
     const [page, setPage] = useState(0);
     const [expanded, setExpanded] = useState(true);
