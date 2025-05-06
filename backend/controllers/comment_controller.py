@@ -1,5 +1,19 @@
 """
-Comment controller
+Comment Controller
+================
+This module handles all comment-related operations for routes in the application.
+It provides functionality for creating, retrieving, and deleting comments and replies.
+
+Features:
+- Creating comments for routes
+- Creating replies to comments
+- Retrieving comments with pagination
+- Retrieving replies with pagination
+- Deleting comments
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 from flask import jsonify, request
 from models.comment import Comment
@@ -7,7 +21,19 @@ from models.route import Route
 from controllers.auth_controller import verify_session
 
 def create_comment(route_id):
-    """Create a new comment or reply"""
+    """
+    Create a new comment or reply for a route
+    
+    Handles both top-level comments and replies to existing comments.
+    For top-level comments, media URLs can be included.
+    For replies, media is not allowed.
+    
+    Args:
+        route_id (str): ID of the route being commented on
+        
+    Returns:
+        JSON response with comment creation status and comment data
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -75,7 +101,19 @@ def create_comment(route_id):
     })
 
 def get_comments(route_id):
-    """Get top-level comments for a route"""
+    """
+    Get top-level comments for a route with pagination
+    
+    Only returns top-level comments (those without a parent_id).
+    Replies must be fetched separately using get_replies().
+    For private routes, only the owner can view comments.
+    
+    Args:
+        route_id (str): ID of the route to get comments for
+        
+    Returns:
+        JSON response with comments, pagination info, and route rating data
+    """
     # Check if the route exists
     route = Route.get_route_by_id(route_id)
     if not route:
@@ -116,7 +154,19 @@ def get_comments(route_id):
     })
 
 def get_replies(route_id, comment_id):
-    """Get replies for a specific comment"""
+    """
+    Get replies for a specific comment with pagination
+    
+    Returns all comments that have the specified comment_id as their parent_id.
+    For private routes, only the owner can view replies.
+    
+    Args:
+        route_id (str): ID of the route
+        comment_id (str): ID of the parent comment to get replies for
+        
+    Returns:
+        JSON response with replies and pagination info
+    """
     # Check if the route exists
     route = Route.get_route_by_id(route_id)
     if not route:
@@ -163,7 +213,19 @@ def get_replies(route_id, comment_id):
     })
 
 def delete_comment(route_id, comment_id):
-    """Delete comment"""
+    """
+    Delete a comment or reply
+    
+    Users can only delete their own comments.
+    When a parent comment is deleted, all replies are also deleted.
+    
+    Args:
+        route_id (str): ID of the route
+        comment_id (str): ID of the comment to delete
+        
+    Returns:
+        JSON response with deletion status
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -182,4 +244,4 @@ def delete_comment(route_id, comment_id):
     return jsonify({
         'success': True,
         'message': 'Comment deleted successfully'
-    }) 
+    })

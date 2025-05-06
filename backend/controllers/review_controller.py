@@ -1,5 +1,15 @@
 """
-Review controller
+Review Controller
+==============
+This module handles operations related to route reviews.
+It provides functionality for creating, retrieving, and deleting reviews for routes.
+
+Reviews include both text content and numeric ratings, which contribute
+to the overall route rating.
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 from flask import jsonify, request
 from models.review import Review
@@ -7,7 +17,21 @@ from models.route import Route
 from controllers.auth_controller import verify_session
 
 def create_review(route_id):
-    """Create or update comment"""
+    """
+    Create or update a review for a route
+    
+    Reviews include both text content and a numerical rating.
+    Each user can have only one review per route - subsequent
+    reviews from the same user will update their existing review.
+    
+    Authentication is required.
+    
+    Args:
+        route_id (str): ID of the route to review
+        
+    Returns:
+        JSON response with review creation status and review data
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -52,7 +76,17 @@ def create_review(route_id):
     })
 
 def get_reviews(route_id):
-    """Get all comments of the route"""
+    """
+    Get all reviews for a route
+    
+    For private routes, only the owner can view reviews.
+    
+    Args:
+        route_id (str): ID of the route to get reviews for
+        
+    Returns:
+        JSON response with reviews and route rating data
+    """
     # Check if the route exists
     route = Route.get_route_by_id(route_id)
     if not route:
@@ -87,7 +121,19 @@ def get_reviews(route_id):
     })
 
 def delete_review(route_id, review_id):
-    """Delete comment"""
+    """
+    Delete a review
+    
+    Users can only delete their own reviews.
+    Authentication is required.
+    
+    Args:
+        route_id (str): ID of the route
+        review_id (str): ID of the review to delete
+        
+    Returns:
+        JSON response with deletion status
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -106,4 +152,4 @@ def delete_review(route_id, review_id):
     return jsonify({
         'success': True,
         'message': 'Review deleted successfully'
-    }) 
+    })

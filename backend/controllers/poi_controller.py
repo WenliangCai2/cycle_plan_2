@@ -1,5 +1,17 @@
 """
-POI controller for handling Points of Interest
+POI (Points of Interest) Controller
+=================================
+This module handles operations related to points of interest near cycling routes.
+It integrates with the HERE Places API to find relevant POIs along routes.
+
+Features:
+- Retrieving available POI categories
+- Finding POIs near a cycling route based on categories and radius
+- Supporting route-based POI discovery
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 from flask import jsonify, request
 from models.poi import POI
@@ -9,8 +21,11 @@ def get_poi_categories():
     """
     Get available POI categories from HERE Places API
     
+    Retrieves the list of supported POI categories that can be used
+    for filtering POI searches.
+    
     Returns:
-        JSON response with POI categories
+        JSON response with list of supported POI categories
     """
     categories = POI.get_poi_categories()
     
@@ -23,14 +38,22 @@ def get_pois_near_route():
     """
     Get POIs near a cycling route
     
-    Expects:
-        JSON object with:
-        - route: list of coordinates along the route
-        - categories: list of POI categories to search for
-        - radius: search radius in meters (optional, default 500)
+    Finds points of interest along a specified route based on:
+    - Route coordinates (sequence of points)
+    - POI categories of interest
+    - Search radius from the route
+    
+    Authentication is optional but encouraged for caching purposes.
+    
+    Expected request JSON body:
+    {
+        "route": [[lng1, lat1], [lng2, lat2], ...],
+        "categories": ["category1", "category2", ...],
+        "radius": 500  // optional, default is 500 meters
+    }
     
     Returns:
-        JSON response with POIs
+        JSON response with POIs found along the route
     """
     # User authentication is optional, but recommended for caching
     user_id = verify_session(request)

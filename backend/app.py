@@ -1,5 +1,19 @@
 """
 Flask application main file - route planning application
+==============================================================
+This is the main entry point for the Flask-based route planning application.
+It handles server setup, database connections, route registrations, and file uploads.
+
+Features:
+- MongoDB Atlas integration
+- Flask API endpoints
+- CORS configuration
+- File upload capabilities
+- Route management
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 import datetime
 import os
@@ -14,6 +28,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # Configure CORS
+# Sets up Cross-Origin Resource Sharing to allow the frontend to communicate with this API
 CORS(app, 
      resources={r"/api/*": {"origins": "http://localhost:3000"}}, 
      allow_headers=["Content-Type", "Authorization"], 
@@ -21,6 +36,7 @@ CORS(app,
      supports_credentials=True)
 
 # Configure file uploads
+# Defines where uploaded files are stored and what file types are permitted
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'mov'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -30,8 +46,16 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max-limit for video 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Utility function to check allowed file extensions
 def allowed_file(filename):
+    """
+    Utility function to check if a file has an allowed extension
+    
+    Args:
+        filename (str): Name of the file to check
+        
+    Returns:
+        bool: True if file extension is allowed, False otherwise
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -48,7 +72,8 @@ try:
     client.admin.command('ping')
     print("Successfully connected to MongoDB Atlas!")
     
-    # Pass MongoDB instance to model module
+    # Pass MongoDB instance to model modules
+    # This ensures all models have access to the same database instance
     import models.user as user_model
     import models.custom_point as point_model
     import models.route as route_model
@@ -66,6 +91,7 @@ try:
     comment_model.db = db
     
     # Import and register route blueprints
+    # Blueprint registration allows modular organization of routes
     from routes.auth_routes import auth_bp
     from routes.custom_point_routes import custom_point_bp
     from routes.route_routes import route_bp
@@ -85,6 +111,7 @@ try:
     app.register_blueprint(comment_bp)
     
     # Initialize vote routes
+    # Separate initialization for vote routes with database dependency
     from routes.vote_routes import init_routes as init_vote_routes
     init_vote_routes(db)
     
@@ -95,14 +122,34 @@ except Exception as e:
     
     @app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
     def database_error(path):
+        """
+        Error handler for database connection failures
+        Returns a 503 Service Unavailable response for all API requests when DB is down
+        
+        Args:
+            path (str): The API path that was requested
+            
+        Returns:
+            tuple: JSON response with error message and 503 status code
+        """
         return jsonify({
             'success': False,
             'message': 'Database connection failed, please try again later'
         }), 503
 
-# File upload endpoint
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
+    """
+    Endpoint for file uploads (images and videos)
+    
+    Requirements:
+    - User must be authenticated
+    - File must be present in request
+    - File type must be allowed
+    
+    Returns:
+        JSON response with upload status and file URL if successful
+    """
     from controllers.auth_controller import verify_session
     
     # Check if user is authenticated
@@ -156,14 +203,28 @@ def upload_file():
         'message': 'File type not allowed'
     }), 400
 
-# Serve uploaded files
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
+    """
+    Endpoint to serve uploaded files
+    
+    Args:
+        filename (str): Name of the file to serve
+        
+    Returns:
+        File: The requested file from the upload directory
+    """
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Common time interface
 @app.route('/time')
 def get_time():
+    """
+    Simple endpoint to verify frontend-backend connectivity
+    Returns current time and application information
+    
+    Returns:
+        JSON: Contains current time and application stack details
+    """
     now_time = datetime.datetime.now()
     return jsonify({
         'Task': 'Connect the frontend and the backend successfully!',

@@ -1,3 +1,22 @@
+"""
+Route Model
+==========
+This module defines the data model for cycling routes, handling
+creation, retrieval, and management of route information.
+
+Features:
+- Create new routes with waypoints and metadata
+- Retrieve routes by user or ID
+- Delete routes
+- Update route visibility (public/private)
+- Track route sharing statistics
+- Manage route ratings and reviews
+- Query public routes with pagination and sorting
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
+"""
 import uuid
 from datetime import datetime
 
@@ -6,6 +25,20 @@ db = None
 
 class Route:
     def __init__(self, name, locations, user_id, route_id=None, is_public=False, share_count=0, avg_rating=0, review_count=0, image_url=None):
+        """
+        Initialize a new Route object
+        
+        Args:
+            name: Name of the route
+            locations: List of location coordinates along the route
+            user_id: ID of the user who created the route
+            route_id: Unique identifier for the route (auto-generated if None)
+            is_public: Whether the route is publicly visible (default: False)
+            share_count: Number of times the route has been shared (default: 0)
+            avg_rating: Average rating from user reviews (default: 0)
+            review_count: Number of reviews (default: 0)
+            image_url: URL to an image of the route (default: None)
+        """
         self.name = name
         self.locations = locations  # List containing location points
         self.user_id = user_id
@@ -18,6 +51,12 @@ class Route:
         self.image_url = image_url  # Add image URL field
     
     def to_dict(self):
+        """
+        Convert route object to dictionary for serialization
+        
+        Returns:
+            Dictionary representation of the route
+        """
         return {
             'name': self.name,
             'locations': self.locations,
@@ -33,6 +72,15 @@ class Route:
     
     @staticmethod
     def from_dict(route_dict):
+        """
+        Create a Route object from a dictionary
+        
+        Args:
+            route_dict: Dictionary containing route data
+            
+        Returns:
+            Route object populated with dictionary data
+        """
         route = Route(
             name=route_dict['name'],
             locations=route_dict['locations'],
@@ -49,18 +97,39 @@ class Route:
     
     @staticmethod
     def create_route(name, locations, user_id, is_public=False, image_url=None):
+        """
+        Create a new route in the database
+        
+        Args:
+            name: Name of the route
+            locations: List of location coordinates along the route
+            user_id: ID of the user creating the route
+            is_public: Whether the route is publicly visible (default: False)
+            image_url: URL to an image of the route (default: None)
+            
+        Returns:
+            New Route object if successful, None otherwise
+        """
         global db
         if db is None:
             return None
             
         route = Route(name=name, locations=locations, user_id=user_id, is_public=is_public, image_url=image_url)
         result = db.routes.insert_one(route.to_dict())
-        print(f"success to create ，ID: {route.route_id}")
+        print(f"success to create, ID: {route.route_id}")
         return route
     
     @staticmethod
     def get_routes_by_user_id(user_id):
-        """get all routes by user id"""
+        """
+        Get all routes created by a specific user
+        
+        Args:
+            user_id: ID of the user
+            
+        Returns:
+            List of Route objects belonging to the user
+        """
         global db
         if db is None:
             return []
@@ -70,7 +139,15 @@ class Route:
     
     @staticmethod
     def get_route_by_id(route_id):
-        """get a route by id"""
+        """
+        Get a specific route by its ID
+        
+        Args:
+            route_id: Unique identifier for the route
+            
+        Returns:
+            Route object if found, None otherwise
+        """
         global db
         if db is None:
             return None
@@ -82,7 +159,16 @@ class Route:
     
     @staticmethod
     def delete_route(route_id, user_id):
-        """delete a route by id"""
+        """
+        Delete a specific route
+        
+        Args:
+            route_id: Unique identifier for the route
+            user_id: ID of the user attempting deletion (for ownership verification)
+            
+        Returns:
+            Boolean indicating if deletion was successful
+        """
         global db
         if db is None:
             return False
@@ -92,7 +178,15 @@ class Route:
     
     @staticmethod
     def update_share_count(route_id):
-        """Increase route sharing count"""
+        """
+        Increment the share count for a route
+        
+        Args:
+            route_id: Unique identifier for the route
+            
+        Returns:
+            Boolean indicating if update was successful
+        """
         global db
         if db is None:
             return False
@@ -105,7 +199,17 @@ class Route:
     
     @staticmethod
     def update_route_visibility(route_id, user_id, is_public):
-        """Update route visibility settings"""
+        """
+        Update the visibility of a route (public or private)
+        
+        Args:
+            route_id: Unique identifier for the route
+            user_id: ID of the user attempting update (for ownership verification)
+            is_public: Boolean indicating if the route should be public
+            
+        Returns:
+            Boolean indicating if update was successful
+        """
         global db
         if db is None:
             return False
@@ -118,7 +222,18 @@ class Route:
     
     @staticmethod
     def get_public_routes(limit=20, skip=0, sort_by='vote_score', sort_order='desc'):
-        """Get all publicly shared routes"""
+        """
+        Get all publicly shared routes with pagination and sorting
+        
+        Args:
+            limit: Maximum number of routes to return (default: 20)
+            skip: Number of routes to skip for pagination (default: 0)
+            sort_by: Field to sort by (default: 'vote_score')
+            sort_order: Direction to sort ('asc' or 'desc', default: 'desc')
+            
+        Returns:
+            List of public Route objects
+        """
         global db
         if db is None:
             return []
@@ -139,6 +254,12 @@ class Route:
 
     @staticmethod
     def count_public_routes():
+        """
+        Count the total number of public routes
+        
+        Returns:
+            Integer count of public routes
+        """
         global db
         if db is None:
             return 0

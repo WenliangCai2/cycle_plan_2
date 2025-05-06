@@ -1,12 +1,30 @@
 """
-Custom point controller
+Custom Point Controller
+=====================
+This module handles operations related to user-defined custom points on maps.
+It provides functionality for creating, retrieving, and deleting custom points.
+
+Custom points allow users to save specific locations for later use in routes.
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 from flask import jsonify, request
 from models.custom_point import CustomPoint
 from controllers.auth_controller import verify_session
 
 def get_custom_points():
-    """Get all custom points for a user"""
+    """
+    Retrieve all custom points for the authenticated user
+    
+    Returns all custom points created by the current user,
+    with location data and other properties.
+    Authentication is required.
+    
+    Returns:
+        JSON response with list of user's custom points
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -26,7 +44,18 @@ def get_custom_points():
     })
 
 def create_custom_point():
-    """Create a new custom point"""
+    """
+    Create a new custom point for the authenticated user
+    
+    Required point data:
+    - name: Display name for the point
+    - location: Geographic coordinates (lat/lng)
+    
+    Authentication is required.
+    
+    Returns:
+        JSON response with creation status and point data
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -63,7 +92,18 @@ def create_custom_point():
     })
 
 def delete_custom_point(point_id):
-    """delete a custom point"""
+    """
+    Delete a custom point
+    
+    Users can only delete their own custom points.
+    Authentication is required.
+    
+    Args:
+        point_id (str): ID of the custom point to delete
+        
+    Returns:
+        JSON response with deletion status
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -83,4 +123,4 @@ def delete_custom_point(point_id):
     return jsonify({
         'success': True,
         'message': 'success to delete point',
-    }) 
+    })

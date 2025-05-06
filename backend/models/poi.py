@@ -1,5 +1,20 @@
 """
-Points of Interest (POI) model for handling POIs near cycling routes
+Points of Interest (POI) Model
+============================
+This module handles the integration with the HERE Places API to discover
+points of interest near cycling routes. It includes functionality for
+caching results and optimizing API usage.
+
+Features:
+- Find POIs along cycling routes using the HERE Places API
+- Cache POI results to reduce API calls
+- Optimize route sampling to cover relevant areas
+- Remove duplicate POIs from results
+- Categorize POIs by type (food, leisure, services, etc.)
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 import os
 import requests
@@ -18,13 +33,20 @@ class POI:
         """
         Get POIs near a cycling route
         
+        Process:
+        1. Samples key points along the route to optimize API calls
+        2. Checks cache for existing POI data
+        3. Makes API requests to HERE Places API for new data
+        4. Caches results for future use
+        5. Removes duplicate POIs from combined results
+        
         Args:
             route_coordinates: List of coordinate points along the route
             categories: List of POI categories to search for
-            radius: Search radius in meters
+            radius: Search radius in meters (default: 500)
         
         Returns:
-            List of POI objects
+            List of unique POI objects along the route
         """
         # Sample coordinates along the route at intervals to avoid too many API calls
         sampled_coordinates = POI.sample_route_points(route_coordinates, max_points=5)
@@ -82,12 +104,17 @@ class POI:
         """
         Sample a reasonable number of points along the route
         
+        Process:
+        1. Determines if sampling is needed based on route length
+        2. Selects points at regular intervals along the route
+        3. Always includes start and end points
+        
         Args:
             route_coordinates: List of coordinates along the route
-            max_points: Maximum number of points to sample
+            max_points: Maximum number of points to sample (default: 5)
         
         Returns:
-            List of sampled coordinates
+            List of sampled coordinates suitable for API queries
         """
         if not route_coordinates or len(route_coordinates) <= 2:
             return route_coordinates
@@ -116,8 +143,13 @@ class POI:
         """
         Remove duplicate POIs based on place ID
         
+        Process:
+        1. Creates a dictionary keyed by POI ID
+        2. Adds only unique POIs to the dictionary
+        3. Returns the values as a list
+        
         Args:
-            pois: List of POI objects
+            pois: List of POI objects, potentially with duplicates
         
         Returns:
             List of unique POI objects
@@ -135,8 +167,12 @@ class POI:
         """
         Get POIs from cache
         
+        Process:
+        1. Checks if the cache entry exists and is not expired
+        2. Returns cached POIs if valid
+        
         Args:
-            cache_key: Cache key for this query
+            cache_key: Unique cache key for the query
         
         Returns:
             List of POI objects if found in cache, otherwise None
@@ -156,10 +192,15 @@ class POI:
         """
         Cache POIs for future use
         
+        Process:
+        1. Sets expiry time based on current time plus specified hours
+        2. Stores POIs in cache with expiry timestamp
+        3. Updates existing cache entry or creates new one
+        
         Args:
-            cache_key: Cache key for this query
-            pois: List of POI objects
-            expiry_hours: Number of hours until cache entry expires
+            cache_key: Unique cache key for the query
+            pois: List of POI objects to cache
+            expiry_hours: Number of hours until cache entry expires (default: 24)
         """
         global db
         if db is None:
@@ -182,6 +223,10 @@ class POI:
     def get_poi_categories():
         """
         Get available POI categories from HERE Places API
+        
+        Process:
+        1. Returns a predefined dictionary of common POI categories
+        2. Categories are organized in groups with subcategories
         
         Returns:
             Dictionary of category groups with their subcategories

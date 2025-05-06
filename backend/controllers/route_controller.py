@@ -1,12 +1,38 @@
 """
-Route controller
+Route Controller
+==============
+This module handles all route-related operations including creating,
+retrieving, deleting, and sharing routes, as well as updating their visibility.
+
+Features:
+- Get all routes for an authenticated user
+- Create new routes with custom details
+- Delete existing routes
+- Share routes to social media platforms
+- Update route visibility (public/private)
+- Retrieve public routes with filtering and pagination
+- Get detailed information for a specific route
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 from flask import jsonify, request
 from models.route import Route
 from controllers.auth_controller import verify_session
 
 def get_routes():
-    """Get all routes for a user"""
+    """
+    Get all routes for the authenticated user
+    
+    Process:
+    1. Verifies user authentication
+    2. Retrieves all routes for the user
+    3. Converts route objects to dictionaries
+    
+    Returns:
+        JSON response with all user routes or error message
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -26,7 +52,17 @@ def get_routes():
     })
 
 def create_route():
-    """Create a new route"""
+    """
+    Create a new cycling route
+    
+    Process:
+    1. Verifies user authentication
+    2. Validates required route data
+    3. Creates a new route in the database
+    
+    Returns:
+        JSON response with the created route or error message
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -65,7 +101,19 @@ def create_route():
     })
 
 def delete_route(route_id):
-    """Delete a route"""
+    """
+    Delete a specific route
+    
+    Process:
+    1. Verifies user authentication
+    2. Deletes the specified route if owned by the user
+    
+    Args:
+        route_id: Unique identifier for the route to be deleted
+    
+    Returns:
+        JSON response with deletion status or error message
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -87,7 +135,21 @@ def delete_route(route_id):
     })
 
 def share_route(route_id):
-    """Share routes to social media and increase sharing count"""
+    """
+    Share route to social media platforms
+    
+    Process:
+    1. Verifies user authentication
+    2. Validates route exists
+    3. Increments route's share count
+    4. Generates sharing links for various platforms
+    
+    Args:
+        route_id: Unique identifier for the route to be shared
+    
+    Returns:
+        JSON response with sharing URLs or error message
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -126,7 +188,20 @@ def share_route(route_id):
     })
 
 def update_route_visibility(route_id):
-    """Update route public or private"""
+    """
+    Update route visibility (public or private)
+    
+    Process:
+    1. Verifies user authentication
+    2. Validates required visibility parameter
+    3. Updates route visibility in database
+    
+    Args:
+        route_id: Unique identifier for the route to update
+    
+    Returns:
+        JSON response with update status or error message
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -156,7 +231,17 @@ def update_route_visibility(route_id):
     })
 
 def get_public_routes():
-    """Get all publicly shared routes"""
+    """
+    Get all publicly shared routes with pagination and sorting
+    
+    Process:
+    1. Extracts pagination and sorting parameters
+    2. Retrieves public routes from database
+    3. Returns formatted route list with pagination info
+    
+    Returns:
+        JSON response with public routes and total count
+    """
     page = request.args.get('page', 1, type=int)
     limit = request.args.get('limit', 20, type=int)
     sort_by = request.args.get('sort_by', 'vote_score')
@@ -174,7 +259,20 @@ def get_public_routes():
     })
 
 def get_route_by_id(route_id):
-    """Get route details according to route ID"""
+    """
+    Get detailed information for a specific route
+    
+    Process:
+    1. Retrieves route from database
+    2. For private routes, verifies user has permission
+    3. Validates and formats route data
+    
+    Args:
+        route_id: Unique identifier for the route to retrieve
+    
+    Returns:
+        JSON response with route details or error message
+    """
     route = Route.get_route_by_id(route_id)
     
     if not route:
@@ -212,4 +310,4 @@ def get_route_by_id(route_id):
     return jsonify({
         'success': True,
         'route': route_dict
-    }) 
+    })

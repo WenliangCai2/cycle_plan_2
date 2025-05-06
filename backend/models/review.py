@@ -1,5 +1,19 @@
 """
-Review model for routes
+Review Model
+==========
+This module defines the data model for reviews on cycling routes,
+allowing users to rate and provide feedback on routes.
+
+Features:
+- Create and update reviews with ratings
+- Retrieve reviews by route
+- Delete reviews
+- Calculate and update route average ratings
+- Associate reviews with usernames for display
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 import uuid
 from datetime import datetime
@@ -9,6 +23,16 @@ db = None
 
 class Review:
     def __init__(self, route_id, user_id, content, rating, review_id=None):
+        """
+        Initialize a new Review object
+        
+        Args:
+            route_id: ID of the route being reviewed
+            user_id: ID of the user creating the review
+            content: Text content of the review
+            rating: Numeric rating from 1-5 stars
+            review_id: Unique identifier (auto-generated if None)
+        """
         self.route_id = route_id
         self.user_id = user_id
         self.content = content
@@ -18,6 +42,12 @@ class Review:
         self.username = None  # Add username field
     
     def to_dict(self):
+        """
+        Convert review object to dictionary for serialization
+        
+        Returns:
+            Dictionary containing all review properties
+        """
         result = {
             'review_id': self.review_id,
             'route_id': self.route_id,
@@ -35,6 +65,15 @@ class Review:
     
     @staticmethod
     def from_dict(review_dict):
+        """
+        Create a Review object from a dictionary
+        
+        Args:
+            review_dict: Dictionary containing review data
+            
+        Returns:
+            Review object populated with dictionary data
+        """
         review = Review(
             route_id=review_dict['route_id'],
             user_id=review_dict['user_id'],
@@ -47,7 +86,24 @@ class Review:
     
     @staticmethod
     def create_review(route_id, user_id, content, rating):
-        """Create new comment"""
+        """
+        Create a new review or update existing one
+        
+        Process:
+        1. Validates database connection and constrains rating to valid range
+        2. Checks if user has already reviewed this route
+        3. Updates existing review or creates new one
+        4. Updates route's average rating
+        
+        Args:
+            route_id: ID of the route being reviewed
+            user_id: ID of the user creating the review
+            content: Text content of the review
+            rating: Numeric rating from 1-5 stars
+            
+        Returns:
+            Review object if successful, None otherwise
+        """
         global db
         if db is None:
             return None
@@ -90,7 +146,22 @@ class Review:
     
     @staticmethod
     def get_reviews_by_route_id(route_id, limit=20, skip=0):
-        """Get all comments of the route"""
+        """
+        Get all reviews for a route with pagination
+        
+        Process:
+        1. Validates database connection
+        2. Retrieves reviews with pagination and sorting
+        3. Fetches usernames for each review
+        
+        Args:
+            route_id: ID of the route to get reviews for
+            limit: Maximum number of reviews to return
+            skip: Number of reviews to skip for pagination
+            
+        Returns:
+            List of Review objects with username information
+        """
         global db
         if db is None:
             return []
@@ -118,7 +189,21 @@ class Review:
     
     @staticmethod
     def delete_review(review_id, user_id):
-        """Delete review"""
+        """
+        Delete a review
+        
+        Process:
+        1. Validates review exists and belongs to the user
+        2. Deletes the review from the database
+        3. Updates the route's average rating
+        
+        Args:
+            review_id: ID of the review to delete
+            user_id: ID of the user attempting deletion
+            
+        Returns:
+            Boolean indicating if deletion was successful
+        """
         global db
         if db is None:
             return False
@@ -143,7 +228,20 @@ class Review:
     
     @staticmethod
     def update_route_rating(route_id):
-        """Update route average score"""
+        """
+        Update route average score based on review ratings
+        
+        Process:
+        1. Uses aggregation pipeline to calculate average rating
+        2. Updates route document with new average and review count
+        3. Resets rating to zero if no reviews exist
+        
+        Args:
+            route_id: ID of the route to update ratings for
+            
+        Returns:
+            Boolean indicating if update was successful
+        """
         global db
         if db is None:
             return False
@@ -181,4 +279,4 @@ class Review:
             }}
         )
         
-        return True 
+        return True
