@@ -14,9 +14,9 @@
  * - Notification system for vote actions
  * - Mobile-responsive design
  * 
- * Author: [Author Name]
+ * Author: Zhuoyi Zhang
  * Contributors: [Contributors Names]
- * Last Modified: [Date]
+ * Last Modified: 07/05/2025
  */
 import React, { useState, useEffect } from 'react';
 import { createOrUpdateVote, getRouteVotes } from '../api/voteApi';

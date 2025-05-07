@@ -11,9 +11,9 @@ Features:
 - Retrieve vote statistics for routes
 - Track user's vote status for routes
 
-Author: [Author Name]
+Author: Zhuoyi Zhang
 Contributors: [Contributors Names]
-Last Modified: [Date]
+Last Modified: 07/05/2025
 """
 from flask import jsonify, request
 from models.vote import Vote

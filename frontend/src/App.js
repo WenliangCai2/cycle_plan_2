@@ -13,8 +13,8 @@
  * - Initial disclaimer acceptance handling
  * 
  * Author: [Your Name]
- * Contributors: [Contributors Names]
- * Last Modified: [Date]
+ * Contributors: Zhuoyi Zhang
+ * Last Modified: 07/05/2025
  */
 import React, { useState, useEffect } from 'react';
 import { 

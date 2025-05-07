@@ -17,8 +17,8 @@
  * - Responsive grid layout for different devices
  * 
  * Author: [Author Name]
- * Contributors: [Contributors Names]
- * Last Modified: [Date]
+ * Contributors: Zhuoyi Zhang
+ * Last Modified: 07/05/2025
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

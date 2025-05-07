@@ -10,9 +10,9 @@ Features:
 - Get vote statistics for routes
 - Initialize database connection for vote controller
 
-Author: [Author Name]
+Author: Zhuoyi Zhang
 Contributors: [Contributors Names]
-Last Modified: [Date]
+Last Modified: 07/05/2025
 """
 from flask import Blueprint
 from controllers.vote_controller import create_or_update_vote, get_route_votes

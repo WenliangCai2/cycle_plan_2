@@ -9,9 +9,9 @@
  * - Remove votes by toggling the same vote type
  * - Retrieve vote statistics for routes
  * 
- * Author: [Author Name]
+ * Author: Zhuoyi Zhang
  * Contributors: [Contributors Names]
- * Last Modified: [Date]
+ * Last Modified: 07/05/2025
  */
 import axios from 'axios';
 
