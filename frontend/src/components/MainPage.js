@@ -1089,7 +1089,17 @@ const MainPage = () => {
     );
   };
 
-  // Modify the "Clear Selection" button event handler
+  /**
+   * Clear all selected points from current route
+   * 
+   * Process:
+   * 1. Resets selectedRestaurants state to empty array
+   * 2. Calls Map component's clearAllSelections method via ref
+   * 
+   * Side effects:
+   *   Updates selectedRestaurants state
+   *   Triggers Map component method via ref
+   */
   const handleClearSelection = () => {
     // Clear the selected restaurants
     setSelectedRestaurants([]);

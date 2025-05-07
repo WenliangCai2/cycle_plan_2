@@ -1,3 +1,19 @@
+/**
+ * Frontend Module Configuration
+ * =======================
+ * This module manages module path resolution, aliases, and TypeScript configuration
+ * for the React application build process.
+ * 
+ * Features:
+ * - Module path resolution based on tsconfig/jsconfig baseUrl
+ * - Webpack alias configuration
+ * - Jest alias configuration
+ * - TypeScript/JavaScript project setup validation
+ * 
+ * Author: [Your Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 'use strict';
 
 const fs = require('fs');
@@ -8,8 +24,17 @@ const resolve = require('resolve');
 
 /**
  * Get additional module paths based on the baseUrl of a compilerOptions object.
- *
- * @param {Object} options
+ * 
+ * Process:
+ * 1. Resolves baseUrl relative to the app path
+ * 2. Validates that baseUrl is set to 'src' or 'node_modules'
+ * 3. Returns appropriate module paths array
+ * 
+ * Args:
+ *   options (Object): Compiler options containing baseUrl
+ *   
+ * Returns:
+ *   Array|null: Array of module paths or null if using default paths
  */
 function getAdditionalModulePaths(options = {}) {
   const baseUrl = options.baseUrl;
@@ -51,8 +76,16 @@ function getAdditionalModulePaths(options = {}) {
 
 /**
  * Get webpack aliases based on the baseUrl of a compilerOptions object.
- *
- * @param {*} options
+ * 
+ * Process:
+ * 1. Resolves baseUrl relative to the app path
+ * 2. Creates alias mapping for src directory
+ * 
+ * Args:
+ *   options (Object): Compiler options containing baseUrl
+ *   
+ * Returns:
+ *   Object: Webpack alias configuration object
  */
 function getWebpackAliases(options = {}) {
   const baseUrl = options.baseUrl;
@@ -72,8 +105,16 @@ function getWebpackAliases(options = {}) {
 
 /**
  * Get jest aliases based on the baseUrl of a compilerOptions object.
- *
- * @param {*} options
+ * 
+ * Process:
+ * 1. Resolves baseUrl relative to the app path
+ * 2. Creates alias mapping for src directory with regex pattern
+ * 
+ * Args:
+ *   options (Object): Compiler options containing baseUrl
+ *   
+ * Returns:
+ *   Object: Jest alias configuration object
  */
 function getJestAliases(options = {}) {
   const baseUrl = options.baseUrl;
@@ -91,6 +132,21 @@ function getJestAliases(options = {}) {
   }
 }
 
+/**
+ * Determines module configuration based on project setup.
+ * 
+ * Process:
+ * 1. Checks for presence of tsconfig.json or jsconfig.json
+ * 2. Loads appropriate configuration
+ * 3. Generates module paths and aliases
+ * 
+ * Returns:
+ *   Object: Module configuration with the following properties:
+ *     - additionalModulePaths: Additional paths for module resolution
+ *     - webpackAliases: Aliases for webpack configuration
+ *     - jestAliases: Aliases for Jest configuration
+ *     - hasTsConfig: Boolean indicating TypeScript usage
+ */
 function getModules() {
   // Check if TypeScript is setup
   const hasTsConfig = fs.existsSync(paths.appTsConfig);

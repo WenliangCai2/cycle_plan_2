@@ -1,3 +1,19 @@
+/**
+ * Production Build Script
+ * =======================
+ * This script handles the production build process for the React application.
+ * 
+ * Features:
+ * - Environment configuration for production
+ * - Webpack compilation with production settings
+ * - Bundle size reporting
+ * - Error handling and formatting
+ * - Static asset copying
+ * 
+ * Author: [Your Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 'use strict';
 
 // Do this as the first thing so that any code reading it knows the right env.
@@ -131,7 +147,21 @@ checkBrowsers(paths.appPath, isInteractive)
     process.exit(1);
   });
 
-// Create the production build and print the deployment instructions.
+/**
+ * Create the production build and print the deployment instructions.
+ * 
+ * Process:
+ * 1. Runs webpack compiler with production configuration
+ * 2. Formats and handles build errors and warnings
+ * 3. Generates stats JSON if requested
+ * 4. Returns build statistics
+ * 
+ * Args:
+ *   previousFileSizes (Object): Sizes of files before build
+ *   
+ * Returns:
+ *   Promise: Resolves with build statistics object
+ */
 function build(previousFileSizes) {
   console.log('Creating an optimized production build...');
 
@@ -209,6 +239,14 @@ function build(previousFileSizes) {
   });
 }
 
+/**
+ * Copy public folder contents to build directory.
+ * 
+ * Process:
+ * 1. Copies all files from public directory to build directory
+ * 2. Excludes index.html which is processed by webpack
+ * 3. Preserves symlinks during copying
+ */
 function copyPublicFolder() {
   fs.copySync(paths.appPublic, paths.appBuild, {
     dereference: true,

@@ -1,3 +1,28 @@
+/**
+ * Development Server Script
+ * =======================
+ * This script starts the development server for the React application.
+ * 
+ * Features:
+ * - Environment configuration for development
+ * - Dev server setup with hot reloading
+ * - Port selection and availability checking
+ * - Browser auto-opening
+ * - Process signal handling
+ * 
+ * Author: [Your Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ * 
+ * Development server startup process:
+ * 1. Set environment variables for development
+ * 2. Validate required files exist
+ * 3. Find available port
+ * 4. Create webpack compiler with dev configuration
+ * 5. Configure and start webpack dev server
+ * 6. Open browser when server is ready
+ * 7. Handle termination signals gracefully
+ */
 'use strict';
 
 // Do this as the first thing so that any code reading it knows the right env.
