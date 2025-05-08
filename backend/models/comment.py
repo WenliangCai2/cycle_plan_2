@@ -1,5 +1,20 @@
 """
-Comment model for routes, supporting media uploads and replies
+Comment Model
+===========
+This module defines the data model for comments on cycling routes,
+supporting a threaded comment system with media attachments and ratings.
+
+Features:
+- Create comments and replies on routes
+- Store and retrieve media attachments with comments
+- Support for 1-5 star ratings
+- Calculate and update route average ratings
+- Manage nested replies and reply counts
+- Delete comments with cascading effect on replies
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 import uuid
 from datetime import datetime
@@ -9,6 +24,18 @@ db = None
 
 class Comment:
     def __init__(self, route_id, user_id, content, rating=5, media_urls=None, parent_id=None, comment_id=None):
+        """
+        Initialize a new Comment object
+        
+        Args:
+            route_id: ID of the route being commented on
+            user_id: ID of the user creating the comment
+            content: Text content of the comment
+            rating: Numeric rating from 1-5 stars
+            media_urls: List of URLs to attached media files
+            parent_id: ID of parent comment if this is a reply
+            comment_id: Unique identifier (auto-generated if None)
+        """
         self.route_id = route_id
         self.user_id = user_id
         self.content = content
@@ -21,6 +48,12 @@ class Comment:
         self.reply_count = 0  # Count of replies
     
     def to_dict(self):
+        """
+        Convert comment object to dictionary for serialization
+        
+        Returns:
+            Dictionary containing all comment properties
+        """
         result = {
             'comment_id': self.comment_id,
             'route_id': self.route_id,
@@ -41,6 +74,15 @@ class Comment:
     
     @staticmethod
     def from_dict(comment_dict):
+        """
+        Create a Comment object from a dictionary
+        
+        Args:
+            comment_dict: Dictionary containing comment data
+            
+        Returns:
+            Comment object populated with dictionary data
+        """
         comment = Comment(
             route_id=comment_dict['route_id'],
             user_id=comment_dict['user_id'],
@@ -56,7 +98,26 @@ class Comment:
     
     @staticmethod
     def create_comment(route_id, user_id, content, rating=5, media_urls=None, parent_id=None):
-        """Create new comment"""
+        """
+        Create new comment or reply
+        
+        Process:
+        1. Validates database connection and constrains rating to valid range
+        2. Creates new comment object and stores in database
+        3. Updates parent comment reply count if this is a reply
+        4. Updates route rating if this is a top-level comment
+        
+        Args:
+            route_id: ID of the route being commented on
+            user_id: ID of the user creating the comment
+            content: Text content of the comment
+            rating: Numeric rating from 1-5 stars
+            media_urls: List of URLs to attached media files
+            parent_id: ID of parent comment if this is a reply
+            
+        Returns:
+            New Comment object if successful, None otherwise
+        """
         global db
         if db is None:
             return None
@@ -90,7 +151,23 @@ class Comment:
     
     @staticmethod
     def get_comments_by_route_id(route_id, limit=20, skip=0, parent_id=None):
-        """Get comments for a route with optional parent_id filter"""
+        """
+        Get comments for a route with optional parent_id filter
+        
+        Process:
+        1. Builds query filter based on route_id and optional parent_id
+        2. Retrieves comments from database with pagination
+        3. Fetches usernames for each comment
+        
+        Args:
+            route_id: ID of the route to get comments for
+            limit: Maximum number of comments to return
+            skip: Number of comments to skip for pagination
+            parent_id: If specified, get only replies to this comment
+            
+        Returns:
+            List of Comment objects with username information
+        """
         global db
         if db is None:
             return []
@@ -125,7 +202,19 @@ class Comment:
     
     @staticmethod
     def get_comment_by_id(comment_id):
-        """Get a specific comment by ID"""
+        """
+        Get a specific comment by ID
+        
+        Process:
+        1. Retrieves comment from database by ID
+        2. Fetches username information for the comment
+        
+        Args:
+            comment_id: Unique identifier for the comment
+            
+        Returns:
+            Comment object if found, None otherwise
+        """
         global db
         if db is None:
             return None
@@ -148,7 +237,23 @@ class Comment:
     
     @staticmethod
     def delete_comment(comment_id, user_id):
-        """Delete comment"""
+        """
+        Delete a comment and its replies
+        
+        Process:
+        1. Verifies comment exists and gets its metadata
+        2. Deletes the comment if owned by the user
+        3. Updates parent reply count if this was a reply
+        4. Cascades deletion to all replies
+        5. Updates route rating if this was a top-level comment
+        
+        Args:
+            comment_id: Unique identifier for the comment to delete
+            user_id: ID of the user attempting deletion
+            
+        Returns:
+            Boolean indicating if deletion was successful
+        """
         global db
         if db is None:
             return False
@@ -189,7 +294,20 @@ class Comment:
     
     @staticmethod
     def count_comments_by_route_id(route_id, parent_id=None):
-        """Count comments for a route with optional parent_id filter"""
+        """
+        Count comments for a route with optional parent_id filter
+        
+        Process:
+        1. Builds query filter based on route_id and optional parent_id
+        2. Counts matching comments in database
+        
+        Args:
+            route_id: ID of the route to count comments for
+            parent_id: If specified, count only replies to this comment
+            
+        Returns:
+            Integer count of matching comments
+        """
         global db
         if db is None:
             return 0
@@ -208,7 +326,20 @@ class Comment:
         
     @staticmethod
     def update_route_rating(route_id):
-        """Update route average score"""
+        """
+        Update route average score based on comment ratings
+        
+        Process:
+        1. Uses aggregation pipeline to calculate average rating
+        2. Updates route document with new average and review count
+        3. Resets rating to zero if no comments exist
+        
+        Args:
+            route_id: ID of the route to update ratings for
+            
+        Returns:
+            Boolean indicating if update was successful
+        """
         global db
         if db is None:
             return False
@@ -246,4 +377,4 @@ class Comment:
             }}
         )
         
-        return True 
+        return True

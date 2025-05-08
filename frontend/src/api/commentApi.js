@@ -1,5 +1,19 @@
 /**
- * Comment related API services
+ * Comment API Service
+ * ===============
+ * This module handles all comment-related API requests including
+ * creating, retrieving, and managing comments and replies on routes.
+ * 
+ * Features:
+ * - Media file uploads for comment attachments
+ * - Create comments and replies on routes
+ * - Retrieve comments with pagination
+ * - Get nested replies for threaded conversations
+ * - Delete comments with proper authorization
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
  */
 import axios from 'axios';
 
@@ -14,7 +28,14 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add authentication token
+/**
+ * Request interceptor to include authentication token
+ * 
+ * Process:
+ * 1. Retrieves token from localStorage if present
+ * 2. Adds token to request headers for authentication
+ * 3. Handles errors in the request preparation phase
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -30,6 +51,12 @@ api.interceptors.request.use(
 
 /**
  * Upload a file (image or video)
+ * 
+ * Process:
+ * 1. Creates FormData object and appends file
+ * 2. Sends specialized request with multipart content type
+ * 3. Includes authentication token in headers
+ * 
  * @param {File} file - The file to upload
  * @returns {Promise} - Promise containing the upload result
  */
@@ -53,6 +80,12 @@ export const uploadFile = async (file) => {
 
 /**
  * Create a new comment or reply
+ * 
+ * Process:
+ * 1. Sends comment data to backend endpoint
+ * 2. Handles parent_id attachment for nested replies
+ * 3. Returns backend response or standardized error
+ * 
  * @param {string} routeId - Route ID
  * @param {Object} comment - Comment data
  * @param {string} comment.content - Comment content
@@ -71,6 +104,11 @@ export const createComment = async (routeId, comment) => {
 
 /**
  * Get comments for a route
+ * 
+ * Process:
+ * 1. Retrieves comments with pagination parameters
+ * 2. Returns top-level comments only (not replies)
+ * 
  * @param {string} routeId - Route ID
  * @param {number} page - Page number
  * @param {number} limit - Number of comments per page
@@ -87,6 +125,11 @@ export const getComments = async (routeId, page = 1, limit = 20) => {
 
 /**
  * Get replies for a comment
+ * 
+ * Process:
+ * 1. Retrieves replies for a specific comment
+ * 2. Supports pagination for large reply threads
+ * 
  * @param {string} routeId - Route ID
  * @param {string} commentId - Comment ID
  * @param {number} page - Page number
@@ -104,6 +147,11 @@ export const getReplies = async (routeId, commentId, page = 1, limit = 20) => {
 
 /**
  * Delete a comment
+ * 
+ * Process:
+ * 1. Sends delete request to the backend
+ * 2. Handles authentication and authorization through interceptor
+ * 
  * @param {string} routeId - Route ID
  * @param {string} commentId - Comment ID
  * @returns {Promise} - Promise containing deletion result
@@ -123,4 +171,4 @@ export default {
   getComments,
   getReplies,
   deleteComment,
-}; 
+};

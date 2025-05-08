@@ -1,5 +1,17 @@
 /**
- * Vote related API services
+ * Vote API Service
+ * =============
+ * This module handles all vote-related API requests including
+ * creating, updating, and retrieving votes for cycling routes.
+ * 
+ * Features:
+ * - Create and update votes (upvotes/downvotes)
+ * - Remove votes by toggling the same vote type
+ * - Retrieve vote statistics for routes
+ * 
+ * Author: Zhuoyi Zhang
+ * Contributors: [Contributors Names]
+ * Last Modified: 07/05/2025
  */
 import axios from 'axios';
 
@@ -14,7 +26,14 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add authentication token
+/**
+ * Request interceptor to include authentication token
+ * 
+ * Process:
+ * 1. Retrieves token from localStorage if present
+ * 2. Adds token to request headers for authentication
+ * 3. Handles errors in the request preparation phase
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -30,6 +49,12 @@ api.interceptors.request.use(
 
 /**
  * Create or update a vote for a route
+ * 
+ * Process:
+ * 1. Sends vote type to backend (1 for upvote, -1 for downvote)
+ * 2. Handles toggling behavior (clicking same vote type removes it)
+ * 3. Returns updated vote statistics
+ * 
  * @param {string} routeId - Route ID
  * @param {number} voteType - Vote type (1 for upvote, -1 for downvote)
  * @returns {Promise} - Promise containing creation result
@@ -45,6 +70,11 @@ export const createOrUpdateVote = async (routeId, voteType) => {
 
 /**
  * Get votes for a route
+ * 
+ * Process:
+ * 1. Retrieves vote statistics for a specific route
+ * 2. Returns upvotes, downvotes, score, and user's vote
+ * 
  * @param {string} routeId - Route ID
  * @returns {Promise} - Promise containing vote statistics
  */

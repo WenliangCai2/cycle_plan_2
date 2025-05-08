@@ -1,12 +1,31 @@
+/**
+ * Environment Configuration Module
+ * =======================
+ * This module handles environment variable configuration for webpack,
+ * including loading from .env files and preparing them for injection.
+ * 
+ * Features:
+ * - Environment variable loading from .env files
+ * - Variable priority management
+ * - Dotenv expansion support
+ * - NODE_PATH resolution
+ * - Environment variable filtering for webpack
+ * - JSON stringification for webpack DefinePlugin
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const paths = require('./paths');
 
-// Make sure that including paths.js after env.js will read .env variables.
+// Clear cache for paths module to ensure fresh environment variables
 delete require.cache[require.resolve('./paths')];
 
+// Verify NODE_ENV is defined, required for proper operation
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
   throw new Error(
@@ -14,7 +33,14 @@ if (!NODE_ENV) {
   );
 }
 
-// https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use
+/**
+ * Priority order of dotenv files to load (first one found is used)
+ * 
+ * 1. .env.{NODE_ENV}.local - Local overrides of environment-specific settings
+ * 2. .env.local - Local overrides (skipped for test environment for consistency)
+ * 3. .env.{NODE_ENV} - Environment-specific settings
+ * 4. .env - Default settings
+ */
 const dotenvFiles = [
   `${paths.dotenv}.${NODE_ENV}.local`,
   // Don't include `.env.local` for `test` environment
@@ -25,11 +51,15 @@ const dotenvFiles = [
   paths.dotenv,
 ].filter(Boolean);
 
-// Load environment variables from .env* files. Suppress warnings using silent
-// if this file is missing. dotenv will never modify any environment variables
-// that have already been set.  Variable expansion is supported in .env files.
-// https://github.com/motdotla/dotenv
-// https://github.com/motdotla/dotenv-expand
+/**
+ * Load environment variables from .env* files
+ * 
+ * Process:
+ * 1. Checks if each dotenv file exists
+ * 2. Loads environment variables from each existing file
+ * 3. Expands variables using dotenv-expand
+ * 4. Skips already defined variables (does not override)
+ */
 dotenvFiles.forEach(dotenvFile => {
   if (fs.existsSync(dotenvFile)) {
     require('dotenv-expand')(
@@ -40,15 +70,16 @@ dotenvFiles.forEach(dotenvFile => {
   }
 });
 
-// We support resolving modules according to `NODE_PATH`.
-// This lets you use absolute paths in imports inside large monorepos:
-// https://github.com/facebook/create-react-app/issues/253.
-// It works similar to `NODE_PATH` in Node itself:
-// https://nodejs.org/api/modules.html#modules_loading_from_the_global_folders
-// Note that unlike in Node, only *relative* paths from `NODE_PATH` are honored.
-// Otherwise, we risk importing Node.js core modules into an app instead of webpack shims.
-// https://github.com/facebook/create-react-app/issues/1023#issuecomment-265344421
-// We also resolve them to make sure all tools using them work consistently.
+/**
+ * Configure NODE_PATH for webpack module resolution
+ * 
+ * Process:
+ * 1. Gets the application directory
+ * 2. Processes NODE_PATH from environment or defaults to empty
+ * 3. Filters only relative paths for security
+ * 4. Resolves paths relative to application directory
+ * 5. Joins with appropriate delimiter
+ */
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .split(path.delimiter)
@@ -56,11 +87,26 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .map(folder => path.resolve(appDirectory, folder))
   .join(path.delimiter);
 
-// Grab NODE_ENV and REACT_APP_* environment variables and prepare them to be
-// injected into the application via DefinePlugin in webpack configuration.
+// Regular expression to filter React App specific environment variables
 const REACT_APP = /^REACT_APP_/i;
 
+/**
+ * Create webpack-compatible environment configuration
+ * 
+ * Process:
+ * 1. Filters environment variables that start with REACT_APP_
+ * 2. Adds required webpack environment variables
+ * 3. Produces raw and stringified versions
+ * 4. Formats for use with webpack's DefinePlugin
+ * 
+ * Args:
+ *   publicUrl (String): URL path to public assets
+ * 
+ * Returns:
+ *   Object with raw and stringified environment variables
+ */
 function getClientEnvironment(publicUrl) {
+  // Prepare raw environment variable object
   const raw = Object.keys(process.env)
     .filter(key => REACT_APP.test(key))
     .reduce(
@@ -69,7 +115,7 @@ function getClientEnvironment(publicUrl) {
         return env;
       },
       {
-        // Useful for determining whether we’re running in production mode.
+        // Useful for determining whether we're running in production mode.
         // Most importantly, it switches React into the correct mode.
         NODE_ENV: process.env.NODE_ENV || 'development',
         // Useful for resolving the correct path to static assets in `public`.
@@ -90,7 +136,8 @@ function getClientEnvironment(publicUrl) {
         FAST_REFRESH: process.env.FAST_REFRESH !== 'false',
       }
     );
-  // Stringify all values so we can feed into webpack DefinePlugin
+  
+  // Stringify all values for webpack DefinePlugin
   const stringified = {
     'process.env': Object.keys(raw).reduce((env, key) => {
       env[key] = JSON.stringify(raw[key]);

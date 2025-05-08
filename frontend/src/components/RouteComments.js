@@ -1,3 +1,23 @@
+/**
+ * Route Comments Component
+ * =======================
+ * This module provides a feature-rich commenting system for routes, allowing users 
+ * to share their thoughts, upload media, and interact with other users' comments
+ * through replies and ratings.
+ * 
+ * Features:
+ * - Comment creation with text and media upload support
+ * - Route rating system with star-based visualization
+ * - Reply functionality for threaded conversations
+ * - Comment and reply management (view, create, delete)
+ * - Media attachment support (images and videos) with preview
+ * - Pagination for both comments and replies
+ * - User-friendly error handling and notifications
+ * 
+ * Author: [Your Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState, useEffect } from 'react';
 import { 
   List, Avatar, Form, Button, Input, Card, message, Pagination, 
@@ -15,7 +35,22 @@ const { TextArea } = Input;
 const { Panel } = Collapse;
 
 /**
- * Component to display a media item (image or video)
+ * Media Item Component
+ * =======================
+ * Displays a media item (image or video) with proper formatting and click handling.
+ * 
+ * Process:
+ * 1. Determines media type (image or video)
+ * 2. Renders appropriate element with consistent styling
+ * 3. Attaches click handler for preview functionality
+ * 
+ * Args:
+ *   url (String): URL of the media resource
+ *   type (String): Media type ('image' or 'video')
+ *   onClick (Function): Handler function for click events
+ * 
+ * Returns:
+ *   Rendered media component with proper styling and interactivity
  */
 const MediaItem = ({ url, type, onClick }) => {
   if (type === 'image') {
@@ -43,7 +78,22 @@ const MediaItem = ({ url, type, onClick }) => {
 };
 
 /**
- * Media preview modal component
+ * Media Preview Modal Component
+ * =======================
+ * Provides a fullscreen modal for viewing media items in larger format.
+ * 
+ * Process:
+ * 1. Renders a modal dialog when visible is true
+ * 2. Dynamically renders image or video based on media type
+ * 3. Provides close functionality
+ * 
+ * Args:
+ *   visible (Boolean): Controls modal visibility
+ *   media (Object): Media item with url and type properties
+ *   onClose (Function): Handler for closing the modal
+ * 
+ * Returns:
+ *   Modal dialog with media content and close button
  */
 const MediaPreviewModal = ({ visible, media, onClose }) => {
   if (!media) return null;
@@ -75,7 +125,21 @@ const MediaPreviewModal = ({ visible, media, onClose }) => {
 };
 
 /**
- * Component for media upload in comments
+ * Media Upload Component
+ * =======================
+ * Provides file upload functionality for attaching media to comments.
+ * 
+ * Process:
+ * 1. Manages file state and upload process
+ * 2. Handles file validation and submission to API
+ * 3. Provides feedback during upload process
+ * 4. Calls callback function on successful upload
+ * 
+ * Args:
+ *   onUploadSuccess (Function): Callback for successful uploads
+ * 
+ * Returns:
+ *   Upload button with file picker functionality
  */
 const MediaUpload = ({ onUploadSuccess }) => {
   const [fileList, setFileList] = useState([]);
@@ -129,7 +193,30 @@ const MediaUpload = ({ onUploadSuccess }) => {
 };
 
 /**
- * Comment editor component
+ * Comment Editor Component
+ * =======================
+ * Provides input interface for creating comments and replies.
+ * 
+ * Process:
+ * 1. Renders text area for content input
+ * 2. Manages comment submission state
+ * 3. Shows media preview for attached files
+ * 4. Provides rating input for root comments
+ * 
+ * Args:
+ *   onChange (Function): Handler for content changes
+ *   onSubmit (Function): Handler for form submission
+ *   submitting (Boolean): Indicates submission in progress
+ *   content (String): Current text content
+ *   username (String): Current user's username
+ *   onMediaUpload (Function): Handler for media uploads
+ *   mediaItems (Array): List of attached media items
+ *   isReply (Boolean): Whether this editor is for a reply
+ *   rating (Number): Current rating value
+ *   setRating (Function): Handler for rating changes
+ * 
+ * Returns:
+ *   Form with text area, media preview, and submission controls
  */
 const CommentEditor = ({ 
   onChange, 
@@ -223,7 +310,23 @@ const CommentEditor = ({
 );
 
 /**
- * Route comments component
+ * Route Comments Component
+ * =======================
+ * Main component for managing comments on a route.
+ * 
+ * Process:
+ * 1. Fetches and displays comments for the specified route
+ * 2. Manages comment creation, deletion, and replies
+ * 3. Handles pagination for both comments and replies
+ * 4. Provides media upload and preview functionality
+ * 5. Manages user authentication and permission checking
+ * 
+ * Args:
+ *   routeId (String): ID of the route to display comments for
+ *   currentUserId (String): ID of the current logged-in user
+ * 
+ * Returns:
+ *   Complete comments interface with creation form, comment list, and pagination
  */
 const RouteComments = ({ routeId, currentUserId }) => {
   const [comments, setComments] = useState([]);
@@ -248,7 +351,19 @@ const RouteComments = ({ routeId, currentUserId }) => {
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
 
-  // Fetch comments
+  /**
+   * Fetch comments for the current route
+   * 
+   * Process:
+   * 1. Sets loading state
+   * 2. Calls API to fetch comments
+   * 3. Updates component state with results
+   * 4. Fetches usernames for comment authors
+   * 5. Handles error states
+   * 
+   * Args:
+   *   page (Number): Page number to fetch, defaults to 1
+   */
   const fetchComments = async (page = 1) => {
     setLoading(true);
     
@@ -303,7 +418,20 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Fetch replies for a comment
+  /**
+   * Fetch replies for a specific comment
+   * 
+   * Process:
+   * 1. Sets loading state for the comment's replies
+   * 2. Calls API to fetch replies
+   * 3. Updates component state with results
+   * 4. Fetches usernames for reply authors
+   * 5. Handles error states
+   * 
+   * Args:
+   *   commentId (String): ID of the parent comment
+   *   page (Number): Page number to fetch, defaults to 1
+   */
   const fetchReplies = async (commentId, page = 1) => {
     try {
       // Set loading state for this comment's replies
@@ -384,14 +512,25 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Load comments after component mount
+  /**
+   * Load comments when component mounts or routeId changes
+   */
   useEffect(() => {
     if (routeId) {
       fetchComments();
     }
   }, [routeId]);
   
-  // Handle reply button click
+  /**
+   * Handle reply section toggle
+   * 
+   * Process:
+   * 1. Toggles visibility state for the comment's replies
+   * 2. Fetches replies if needed when showing for the first time
+   * 
+   * Args:
+   *   commentId (String): ID of the parent comment
+   */
   const handleShowReplies = (commentId) => {
     // Toggle reply section visibility
     setShowReplies(prev => ({
@@ -405,12 +544,23 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Handle content change for main comment
+  /**
+   * Handle content change for main comment input
+   * 
+   * Args:
+   *   e (Event): Change event from text input
+   */
   const handleContentChange = (e) => {
     setContent(e.target.value);
   };
   
-  // Handle content change for reply
+  /**
+   * Handle content change for reply input
+   * 
+   * Args:
+   *   commentId (String): ID of the parent comment
+   *   e (Event): Change event from text input
+   */
   const handleReplyContentChange = (commentId, e) => {
     setReplyContent(prev => ({
       ...prev,
@@ -418,7 +568,16 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }));
   };
   
-  // Submit main comment
+  /**
+   * Submit a new comment
+   * 
+   * Process:
+   * 1. Validates comment content
+   * 2. Sets submitting state
+   * 3. Calls API to create comment
+   * 4. Updates component state on success
+   * 5. Handles error states
+   */
   const handleSubmit = async () => {
     if (!content.trim() && mediaItems.length === 0) {
       message.error('Please enter a comment or upload media');
@@ -453,7 +612,19 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Submit reply
+  /**
+   * Submit a reply to a comment
+   * 
+   * Process:
+   * 1. Validates reply content
+   * 2. Sets submitting state for the specific reply
+   * 3. Calls API to create comment with parent_id
+   * 4. Updates component state on success
+   * 5. Handles error states
+   * 
+   * Args:
+   *   commentId (String): ID of the parent comment
+   */
   const handleSubmitReply = async (commentId) => {
     if (!replyContent[commentId] || !replyContent[commentId].trim()) {
       message.error('Please enter a reply');
@@ -506,7 +677,17 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Delete comment
+  /**
+   * Delete a comment
+   * 
+   * Process:
+   * 1. Calls API to delete comment
+   * 2. Reloads comments on success
+   * 3. Handles error states
+   * 
+   * Args:
+   *   commentId (String): ID of the comment to delete
+   */
   const handleDeleteComment = async (commentId) => {
     try {
       const response = await deleteComment(routeId, commentId);
@@ -522,7 +703,19 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Delete reply
+  /**
+   * Delete a reply
+   * 
+   * Process:
+   * 1. Calls API to delete reply (comment with parent)
+   * 2. Reloads replies for the parent comment
+   * 3. Updates reply count for parent comment
+   * 4. Handles error states
+   * 
+   * Args:
+   *   commentId (String): ID of the parent comment
+   *   replyId (String): ID of the reply to delete
+   */
   const handleDeleteReply = async (commentId, replyId) => {
     try {
       const response = await deleteComment(routeId, replyId);
@@ -550,17 +743,41 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Handle pagination change
+  /**
+   * Handle pagination change for comments
+   * 
+   * Args:
+   *   page (Number): New page number
+   */
   const handlePageChange = (page) => {
     fetchComments(page);
   };
   
-  // Handle reply pagination change
+  /**
+   * Handle pagination change for replies
+   * 
+   * Args:
+   *   commentId (String): ID of the parent comment
+   *   page (Number): New page number
+   */
   const handleReplyPageChange = (commentId, page) => {
     fetchReplies(commentId, page);
   };
   
-  // Format date
+  /**
+   * Format date string for display
+   * 
+   * Process:
+   * 1. Converts string to Date object
+   * 2. Formats using locale settings
+   * 3. Handles errors gracefully
+   * 
+   * Args:
+   *   dateString (String): Date string to format
+   * 
+   * Returns:
+   *   Formatted date string
+   */
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -571,17 +788,24 @@ const RouteComments = ({ routeId, currentUserId }) => {
     }
   };
   
-  // Open media preview
+  /**
+   * Open media preview modal
+   * 
+   * Args:
+   *   media (Object): Media item to preview
+   */
   const handleMediaPreview = (media) => {
     setMediaPreview(media);
   };
   
-  // Close media preview
+  /**
+   * Close media preview modal
+   */
   const handleCloseMediaPreview = () => {
     setMediaPreview(null);
   };
   
-  // Transparent card style
+  // UI style definitions
   const transparentCardStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(5px)',
@@ -590,7 +814,6 @@ const RouteComments = ({ routeId, currentUserId }) => {
     overflow: 'hidden'
   };
   
-  // Transparent Card header style
   const cardHeaderStyle = {
     backgroundColor: 'rgba(46, 125, 50, 0.05)',
     color: 'white',
@@ -624,282 +847,303 @@ const RouteComments = ({ routeId, currentUserId }) => {
     color: 'rgba(0, 0, 0, 0.7)'
   };
   
-  return (
-    <div className="route-comments">
-      <Card 
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', color: 'black' }}>
-            <span>Comments</span>
-            {reviewCount > 0 && (
-              <span style={{ marginLeft: '10px' }}>
-                <Rate disabled allowHalf value={avgRating} style={{ fontSize: '16px' }} />
-                <span style={{ marginLeft: '10px', color: 'black' }}>({reviewCount} reviews)</span>
-              </span>
-            )}
-          </div>
-        }
-        loading={loading}
-        style={transparentCardStyle}
-        headStyle={cardHeaderStyle}
-        bodyStyle={{ padding: '16px', color: 'black' }}
-      >
-        {currentUserId && (
-          <Card 
-            className="comment-editor"
-            bordered={false}
-            style={{ 
-              marginBottom: '20px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '8px' 
-            }}
-            bodyStyle={{ 
-              padding: '16px', 
-              color: 'black' 
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-              <Avatar icon={<UserOutlined />} style={{ marginRight: '10px', marginTop: '5px' }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'black' }}>{currentUsername}</div>
-                <CommentEditor
-                  onChange={handleContentChange}
-                  onSubmit={handleSubmit}
-                  submitting={submitting}
-                  content={content}
-                  username={currentUsername}
-                  onMediaUpload={setMediaItems}
-                  mediaItems={mediaItems}
-                  isReply={false}
-                  rating={rating}
-                  setRating={setRating}
-                />
-              </div>
+/**
+ * Render method for RouteComments component
+ * =======================
+ * Renders the complete commenting UI including comment creation form, comments list,
+ * replies, and paginations.
+ * 
+ * Process:
+ * 1. Renders main card container with title and average rating
+ * 2. Conditionally renders comment editor for authenticated users
+ * 3. Renders list of comments with their metadata and content
+ * 4. Handles media attachments display with preview functionality
+ * 5. Implements threaded reply system with collapsible interface
+ * 6. Provides pagination for both comments and replies
+ * 7. Implements media preview modal for fullscreen viewing
+ * 
+ * Returns:
+ *   Complete commenting interface with all interactive elements and styling
+ */
+return (
+  <div className="route-comments">
+    <Card 
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', color: 'black' }}>
+          <span>Comments</span>
+          {reviewCount > 0 && (
+            <span style={{ marginLeft: '10px' }}>
+              <Rate disabled allowHalf value={avgRating} style={{ fontSize: '16px' }} />
+              <span style={{ marginLeft: '10px', color: 'black' }}>({reviewCount} reviews)</span>
+            </span>
+          )}
+        </div>
+      }
+      loading={loading}
+      style={transparentCardStyle}
+      headStyle={cardHeaderStyle}
+      bodyStyle={{ padding: '16px', color: 'black' }}
+    >
+      {/* Comment Editor Section */}
+      {currentUserId && (
+        <Card 
+          className="comment-editor"
+          bordered={false}
+          style={{ 
+            marginBottom: '20px', 
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '8px' 
+          }}
+          bodyStyle={{ 
+            padding: '16px', 
+            color: 'black' 
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+            <Avatar icon={<UserOutlined />} style={{ marginRight: '10px', marginTop: '5px' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'black' }}>{currentUsername}</div>
+              <CommentEditor
+                onChange={handleContentChange}
+                onSubmit={handleSubmit}
+                submitting={submitting}
+                content={content}
+                username={currentUsername}
+                onMediaUpload={setMediaItems}
+                mediaItems={mediaItems}
+                isReply={false}
+                rating={rating}
+                setRating={setRating}
+              />
             </div>
-          </Card>
-        )}
-        
-        {comments.length > 0 ? (
-          <List
-            className="comment-list"
-            itemLayout="horizontal"
-            dataSource={comments}
-            style={{ color: 'black' }}
-            renderItem={comment => (
-              <List.Item style={{ 
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '12px 0',
-                flexDirection: 'column',
-                alignItems: 'flex-start'
-              }}>
-                <div style={{ width: '100%' }}>
-                  <List.Item.Meta
-                    avatar={<Avatar icon={<UserOutlined />} />}
-                    title={
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        color: 'black',
-                        marginBottom: '5px'
-                      }}>
-                        <span>{comment.username || usernames[comment.user_id] || comment.user_id}</span>
-                        <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem' }}>
-                          {formatDate(comment.created_at)}
-                          {currentUserId === comment.user_id && (
-                            <Popconfirm
-                              title="Are you sure you want to delete this comment?"
-                              onConfirm={() => handleDeleteComment(comment.comment_id)}
-                              okText="Yes"
-                              cancelText="No"
-                            >
-                              <Tooltip title="Delete comment">
-                                <Button 
-                                  type="text" 
-                                  danger 
-                                  icon={<DeleteOutlined />}
-                                  size="small"
-                                  style={{ marginLeft: '10px' }}
-                                />
-                              </Tooltip>
-                            </Popconfirm>
-                          )}
-                        </span>
-                      </div>
-                    }
-                    description={
-                      <div style={{ color: 'black' }}>
-                        <Rate disabled allowHalf value={comment.rating} style={{ fontSize: '14px', marginBottom: '8px' }} />
-                        <p style={{ color: 'black', marginBottom: '10px' }}>{comment.content}</p>
-                      </div>
-                    }
-                  />
-                  
-                  {/* Media items */}
-                  {comment.media_urls && comment.media_urls.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px', marginLeft: '48px' }}>
-                      {comment.media_urls.map((media, index) => (
-                        <MediaItem 
-                          key={index} 
-                          url={media.url} 
-                          type={media.type} 
-                          onClick={() => handleMediaPreview(media)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Reply button */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginLeft: '48px' }}>
-                    <Button 
-                      type="text" 
-                      icon={<CommentOutlined />} 
-                      onClick={() => handleShowReplies(comment.comment_id)}
-                      style={{ color: 'black' }}
-                    >
-                      {!showReplies[comment.comment_id] ? `Show Replies (${comment.reply_count || 0})` : 'Hide Replies'}
-                    </Button>
-                  </div>
-                  
-                  {/* Replies section */}
-                  {showReplies[comment.comment_id] && (
-                    <div style={{ marginLeft: '48px', marginTop: '16px' }}>
-                      {/* Reply form */}
-                      {currentUserId && (
-                        <div style={{ marginBottom: '16px' }}>
-                          <CommentEditor
-                            onChange={(e) => handleReplyContentChange(comment.comment_id, e)}
-                            onSubmit={() => handleSubmitReply(comment.comment_id)}
-                            submitting={replySubmitting[comment.comment_id] || false}
-                            content={replyContent[comment.comment_id] || ''}
-                            username={currentUsername}
-                            onMediaUpload={() => {}} // No media for replies
-                            mediaItems={[]}
-                            isReply={true}
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Replies list */}
-                      {replies[comment.comment_id]?.loading ? (
-                        <div style={{ textAlign: 'center', padding: '10px' }}>Loading replies...</div>
-                      ) : (
-                        <>
-                          {replies[comment.comment_id]?.items && replies[comment.comment_id].items.length > 0 ? (
-                            <List
-                              className="reply-list"
-                              itemLayout="horizontal"
-                              dataSource={replies[comment.comment_id]?.items || []}
-                              renderItem={reply => (
-                                <List.Item style={{ 
-                                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                  padding: '12px 0',
-                                  flexDirection: 'column',
-                                  alignItems: 'flex-start'
-                                }}>
-                                  <div style={{ width: '100%' }}>
-                                    <List.Item.Meta
-                                      avatar={<Avatar icon={<UserOutlined />} />}
-                                      title={
-                                        <div style={{ 
-                                          display: 'flex', 
-                                          justifyContent: 'space-between', 
-                                          alignItems: 'center',
-                                          color: 'black',
-                                          marginBottom: '5px'
-                                        }}>
-                                          <span>{reply.username || usernames[reply.user_id] || reply.user_id}</span>
-                                          <span style={{ color: 'rgba(0, 0, 0, 0.7)', fontSize: '0.85rem' }}>
-                                            {formatDate(reply.created_at)}
-                                            {currentUserId === reply.user_id && (
-                                              <Popconfirm
-                                                title="Are you sure you want to delete this reply?"
-                                                onConfirm={() => handleDeleteReply(comment.comment_id, reply.comment_id)}
-                                                okText="Yes"
-                                                cancelText="No"
-                                              >
-                                                <Tooltip title="Delete reply">
-                                                  <Button 
-                                                    type="text" 
-                                                    danger 
-                                                    icon={<DeleteOutlined />}
-                                                    size="small"
-                                                    style={{ marginLeft: '10px' }}
-                                                  />
-                                                </Tooltip>
-                                              </Popconfirm>
-                                            )}
-                                          </span>
-                                        </div>
-                                      }
-                                      description={
-                                        <div style={{ color: 'black' }}>
-                                          <p style={{ color: 'black', marginBottom: '10px' }}>{reply.content}</p>
-                                        </div>
-                                      }
-                                    />
-                                  </div>
-                                </List.Item>
-                              )}
-                            />
-                          ) : (
-                            <div style={{ 
-                              textAlign: 'center', 
-                              padding: '10px',
-                              color: 'rgba(255, 255, 255, 0.7)'
-                            }}>
-                              No replies yet. Be the first to reply!
-                            </div>
-                          )}
-                          
-                          {/* Reply pagination */}
-                          {replyPagination[comment.comment_id] && replyPagination[comment.comment_id].total > replyPagination[comment.comment_id].pageSize && (
-                            <div style={{ textAlign: 'center', marginTop: '10px' }}>
-                              <Pagination
+          </div>
+        </Card>
+      )}
+      
+      {/* Comments List Section */}
+      {comments.length > 0 ? (
+        <List
+          className="comment-list"
+          itemLayout="horizontal"
+          dataSource={comments}
+          style={{ color: 'black' }}
+          renderItem={comment => (
+            <List.Item style={{ 
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '12px 0',
+              flexDirection: 'column',
+              alignItems: 'flex-start'
+            }}>
+              <div style={{ width: '100%' }}>
+                {/* Comment Header - Username, Date, Delete Button */}
+                <List.Item.Meta
+                  avatar={<Avatar icon={<UserOutlined />} />}
+                  title={
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      color: 'black',
+                      marginBottom: '5px'
+                    }}>
+                      <span>{comment.username || usernames[comment.user_id] || comment.user_id}</span>
+                      <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem' }}>
+                        {formatDate(comment.created_at)}
+                        {currentUserId === comment.user_id && (
+                          <Popconfirm
+                            title="Are you sure you want to delete this comment?"
+                            onConfirm={() => handleDeleteComment(comment.comment_id)}
+                            okText="Yes"
+                            cancelText="No"
+                          >
+                            <Tooltip title="Delete comment">
+                              <Button 
+                                type="text" 
+                                danger 
+                                icon={<DeleteOutlined />}
                                 size="small"
-                                current={replyPagination[comment.comment_id].current}
-                                pageSize={replyPagination[comment.comment_id].pageSize}
-                                total={replyPagination[comment.comment_id].total}
-                                onChange={(page) => handleReplyPageChange(comment.comment_id, page)}
-                                hideOnSinglePage
+                                style={{ marginLeft: '10px' }}
                               />
-                            </div>
-                          )}
-                        </>
-                      )}
+                            </Tooltip>
+                          </Popconfirm>
+                        )}
+                      </span>
                     </div>
-                  )}
+                  }
+                  description={
+                    <div style={{ color: 'black' }}>
+                      <Rate disabled allowHalf value={comment.rating} style={{ fontSize: '14px', marginBottom: '8px' }} />
+                      <p style={{ color: 'black', marginBottom: '10px' }}>{comment.content}</p>
+                    </div>
+                  }
+                />
+                
+                {/* Media Attachments Section */}
+                {comment.media_urls && comment.media_urls.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px', marginLeft: '48px' }}>
+                    {comment.media_urls.map((media, index) => (
+                      <MediaItem 
+                        key={index} 
+                        url={media.url} 
+                        type={media.type} 
+                        onClick={() => handleMediaPreview(media)}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Reply Button Section */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginLeft: '48px' }}>
+                  <Button 
+                    type="text" 
+                    icon={<CommentOutlined />} 
+                    onClick={() => handleShowReplies(comment.comment_id)}
+                    style={{ color: 'black' }}
+                  >
+                    {!showReplies[comment.comment_id] ? `Show Replies (${comment.reply_count || 0})` : 'Hide Replies'}
+                  </Button>
                 </div>
-              </List.Item>
-            )}
-          />
-        ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0', color: 'white' }}>
-            {loading ? 'Loading...' : 'No comments yet. Be the first to comment!'}
-          </div>
-        )}
-        
-        {/* Pagination */}
-        {comments.length > 0 && pagination.total > pagination.pageSize && (
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <Pagination
-              current={pagination.current}
-              pageSize={pagination.pageSize}
-              total={pagination.total}
-              onChange={handlePageChange}
-              hideOnSinglePage
-            />
-          </div>
-        )}
-        
-        {/* Media preview modal */}
-        <MediaPreviewModal
-          visible={!!mediaPreview}
-          media={mediaPreview}
-          onClose={handleCloseMediaPreview}
+                
+                {/* Replies Section - Conditionally Rendered */}
+                {showReplies[comment.comment_id] && (
+                  <div style={{ marginLeft: '48px', marginTop: '16px' }}>
+                    {/* Reply Form */}
+                    {currentUserId && (
+                      <div style={{ marginBottom: '16px' }}>
+                        <CommentEditor
+                          onChange={(e) => handleReplyContentChange(comment.comment_id, e)}
+                          onSubmit={() => handleSubmitReply(comment.comment_id)}
+                          submitting={replySubmitting[comment.comment_id] || false}
+                          content={replyContent[comment.comment_id] || ''}
+                          username={currentUsername}
+                          onMediaUpload={() => {}} // No media for replies
+                          mediaItems={[]}
+                          isReply={true}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Replies List with Loading State */}
+                    {replies[comment.comment_id]?.loading ? (
+                      <div style={{ textAlign: 'center', padding: '10px' }}>Loading replies...</div>
+                    ) : (
+                      <>
+                        {replies[comment.comment_id]?.items && replies[comment.comment_id].items.length > 0 ? (
+                          <List
+                            className="reply-list"
+                            itemLayout="horizontal"
+                            dataSource={replies[comment.comment_id]?.items || []}
+                            renderItem={reply => (
+                              <List.Item style={{ 
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                padding: '12px 0',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start'
+                              }}>
+                                <div style={{ width: '100%' }}>
+                                  <List.Item.Meta
+                                    avatar={<Avatar icon={<UserOutlined />} />}
+                                    title={
+                                      <div style={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center',
+                                        color: 'black',
+                                        marginBottom: '5px'
+                                      }}>
+                                        <span>{reply.username || usernames[reply.user_id] || reply.user_id}</span>
+                                        <span style={{ color: 'rgba(0, 0, 0, 0.7)', fontSize: '0.85rem' }}>
+                                          {formatDate(reply.created_at)}
+                                          {currentUserId === reply.user_id && (
+                                            <Popconfirm
+                                              title="Are you sure you want to delete this reply?"
+                                              onConfirm={() => handleDeleteReply(comment.comment_id, reply.comment_id)}
+                                              okText="Yes"
+                                              cancelText="No"
+                                            >
+                                              <Tooltip title="Delete reply">
+                                                <Button 
+                                                  type="text" 
+                                                  danger 
+                                                  icon={<DeleteOutlined />}
+                                                  size="small"
+                                                  style={{ marginLeft: '10px' }}
+                                                />
+                                              </Tooltip>
+                                            </Popconfirm>
+                                          )}
+                                        </span>
+                                      </div>
+                                    }
+                                    description={
+                                      <div style={{ color: 'black' }}>
+                                        <p style={{ color: 'black', marginBottom: '10px' }}>{reply.content}</p>
+                                      </div>
+                                    }
+                                  />
+                                </div>
+                              </List.Item>
+                            )}
+                          />
+                        ) : (
+                          <div style={{ 
+                            textAlign: 'center', 
+                            padding: '10px',
+                            color: 'rgba(255, 255, 255, 0.7)'
+                          }}>
+                            No replies yet. Be the first to reply!
+                          </div>
+                        )}
+                        
+                        {/* Reply Pagination */}
+                        {replyPagination[comment.comment_id] && replyPagination[comment.comment_id].total > replyPagination[comment.comment_id].pageSize && (
+                          <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                            <Pagination
+                              size="small"
+                              current={replyPagination[comment.comment_id].current}
+                              pageSize={replyPagination[comment.comment_id].pageSize}
+                              total={replyPagination[comment.comment_id].total}
+                              onChange={(page) => handleReplyPageChange(comment.comment_id, page)}
+                              hideOnSinglePage
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </List.Item>
+          )}
         />
-      </Card>
-    </div>
-  );
+      ) : (
+        <div style={{ textAlign: 'center', padding: '20px 0', color: 'white' }}>
+          {loading ? 'Loading...' : 'No comments yet. Be the first to comment!'}
+        </div>
+      )}
+      
+      {/* Main Comments Pagination */}
+      {comments.length > 0 && pagination.total > pagination.pageSize && (
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={handlePageChange}
+            hideOnSinglePage
+          />
+        </div>
+      )}
+      
+      {/* Media Preview Modal */}
+      <MediaPreviewModal
+        visible={!!mediaPreview}
+        media={mediaPreview}
+        onClose={handleCloseMediaPreview}
+      />
+    </Card>
+  </div>
+);
 };
 
 export default RouteComments; 

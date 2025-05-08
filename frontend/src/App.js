@@ -1,4 +1,21 @@
-// App.js Complete Version - Using Material-UI Components
+/**
+ * Main Application Component
+ * =======================
+ * This module serves as the entry point for the route planning application,
+ * providing routing, authentication, and layout management.
+ * 
+ * Features:
+ * - Route management with React Router
+ * - Protected routes requiring authentication
+ * - Global application layout with navigation header
+ * - Responsive design with adaptive components
+ * - User authentication state management
+ * - Initial disclaimer acceptance handling
+ * 
+ * Author: [Your Name]
+ * Contributors: Zhuoyi Zhang
+ * Last Modified: 07/05/2025
+ */
 import React, { useState, useEffect } from 'react';
 import { 
   BrowserRouter as Router, 
@@ -75,27 +92,65 @@ import MainPage from './components/MainPage';
 // Import background image
 import backgroundImage from './images/AdobeStock_1291231442_Preview.jpeg';
 
+/**
+ * API key for HERE Maps service
+ * Used across the application for map-based functionality
+ */
 const apikey = 'RbwdXOHKZRDRFw0gKovUUV-eU_TiBYTSGrpRXbkv6MY';
 
-// Default position if geolocation fails (Newcastle)
+/**
+ * Default position coordinates
+ * Used when geolocation fails or is unavailable
+ * Set to Newcastle location as fallback
+ */
 const defaultPosition = { lat: 54.9783, lng: -1.6174 };
 
-// Empty restaurant list - no predefined locations
+/**
+ * Empty restaurant list initialization
+ * No predefined locations are used in this application
+ */
 const restaurantList = [];
 
-// Modify SavedRoutesList component to match PaginatedPointsList appearance and semi-transparent effect
+/**
+ * Saved Routes List Component
+ * =======================
+ * Displays user's saved routes with pagination and interactive controls.
+ * 
+ * Process:
+ * 1. Renders paginated list of routes with route metadata
+ * 2. Provides route loading and detail view functionality
+ * 3. Implements expandable/collapsible interface
+ * 4. Adapts styling based on context (map overlay or standalone)
+ * 
+ * Args:
+ *   routes (Array): List of routes to display
+ *   onLoadRoute (Function): Handler for loading a route
+ *   onViewDetails (Function): Handler for viewing route details
+ *   onDeleteDialog (Function): Handler for delete confirmation
+ *   mapStyle (Boolean): Flag for map overlay styling mode
+ * 
+ * Returns:
+ *   Paginated list of routes with controls and actions
+ */
 const SavedRoutesList = ({ routes, onLoadRoute, onViewDetails, onDeleteDialog, mapStyle = false }) => {
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState(true);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(routes.length / itemsPerPage);
   
-  // Get current page routes
+  /**
+   * Get current page routes based on pagination state
+   * Slices the routes array to display only the current page items
+   */
   const currentPageRoutes = routes.slice(
     page * itemsPerPage,
     (page + 1) * itemsPerPage
   );
   
+  /**
+   * Toggle expanded state of the component
+   * Controls visibility of the route list body
+   */
   const toggleExpand = () => {
     setExpanded(!expanded);
   };
@@ -281,23 +336,58 @@ const SavedRoutesList = ({ routes, onLoadRoute, onViewDetails, onDeleteDialog, m
   );
 };
 
-// Modify the PaginatedPointsList component to enhance click feedback
+/**
+ * Paginated Points List Component
+ * =======================
+ * Displays available points with pagination and selection functionality.
+ * 
+ * Process:
+ * 1. Renders paginated list of location points
+ * 2. Provides selection and deletion functionality
+ * 3. Implements expandable/collapsible interface
+ * 4. Adapts styling based on context (map overlay or standalone)
+ * 
+ * Args:
+ *   points (Array): List of points to display
+ *   selectedLocations (Array): Currently selected points
+ *   onPointClick (Function): Handler for point selection
+ *   itemsPerPage (Number): Items to display per page
+ *   onDeletePoint (Function): Handler for point deletion
+ *   mapStyle (Boolean): Flag for map overlay styling mode
+ * 
+ * Returns:
+ *   Paginated list of points with selection controls
+ */
 const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPerPage = 5, onDeletePoint, mapStyle = false }) => {
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState(true);
   const totalPages = Math.ceil(points.length / itemsPerPage);
   
-  // Get current page points
+  /**
+   * Get current page points based on pagination state
+   * Slices the points array to display only the current page items
+   */
   const currentPagePoints = points.slice(
     page * itemsPerPage,
     (page + 1) * itemsPerPage
   );
   
-  // Handle page change
+  /**
+   * Handle formal page change event
+   * Updates current page number
+   * 
+   * Args:
+   *   event (Event): Page change event
+   *   newPage (Number): New page number
+   */
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
 
+  /**
+   * Toggle expanded state of the component
+   * Controls visibility of the points list body
+   */
   const toggleExpand = () => {
     setExpanded(!expanded);
   };
@@ -614,7 +704,20 @@ const PaginatedPointsList = ({ points, selectedLocations, onPointClick, itemsPer
   );
 };
 
-// AppHeader Component - Add top navigation bar without affecting original functionality
+/**
+ * Application Header Component
+ * =======================
+ * Provides top navigation bar with tabs and user profile menu.
+ * 
+ * Process:
+ * 1. Renders application title and navigation tabs
+ * 2. Handles tab selection and navigation
+ * 3. Displays user profile with dropdown menu
+ * 4. Manages logout functionality
+ * 
+ * Returns:
+ *   Header bar with navigation tabs and user profile
+ */
 const AppHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -622,7 +725,16 @@ const AppHeader = () => {
   const username = localStorage.getItem('username') || 'User';
   const [anchorEl, setAnchorEl] = useState(null);
   
-  // Monitor route changes, update tab status
+  /**
+   * Monitor route changes and update tab selection
+   * 
+   * Process:
+   * 1. Watches location pathname changes
+   * 2. Updates tab selection based on current route
+   * 
+   * Side effects:
+   *   Updates tabValue state when route changes
+   */
   useEffect(() => {
     if (location.pathname === '/mainPage') {
       setTabValue(0);
@@ -631,6 +743,21 @@ const AppHeader = () => {
     }
   }, [location.pathname]);
 
+  /**
+   * Handle tab change
+   * 
+   * Process:
+   * 1. Updates selected tab state
+   * 2. Navigates to corresponding route
+   * 
+   * Args:
+   *   event (Event): Tab change event
+   *   newValue (Number): New tab index
+   * 
+   * Side effects:
+   *   Updates tabValue state
+   *   Navigates to new route
+   */
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
     if (newValue === 0) {
@@ -640,14 +767,49 @@ const AppHeader = () => {
     }
   };
   
+  /**
+   * Handle profile menu click
+   * 
+   * Process:
+   * 1. Sets menu anchor element for positioning
+   * 
+   * Args:
+   *   event (Event): Click event
+   * 
+   * Side effects:
+   *   Updates anchorEl state
+   */
   const handleProfileClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
   
+  /**
+   * Close profile menu
+   * 
+   * Process:
+   * 1. Clears menu anchor element
+   * 
+   * Side effects:
+   *   Updates anchorEl state to null
+   */
   const handleClose = () => {
     setAnchorEl(null);
   };
   
+  /**
+   * Handle user logout
+   * 
+   * Process:
+   * 1. Calls logout API
+   * 2. Clears local storage credentials
+   * 3. Navigates to login page
+   * 4. Handles errors gracefully
+   * 
+   * Side effects:
+   *   Removes authentication data from localStorage
+   *   Closes menu
+   *   Navigates to login page
+   */
   const handleLogout = async () => {
     try {
       await logout();
@@ -730,7 +892,22 @@ const AppHeader = () => {
   );
 };
 
-// Layout component wrapping application content
+/**
+ * Application Layout Component
+ * =======================
+ * Provides consistent layout structure for all protected pages.
+ * 
+ * Process:
+ * 1. Applies background styling to entire application
+ * 2. Includes fixed header with navigation
+ * 3. Creates scrollable content area for page content
+ * 
+ * Args:
+ *   children (Node): Page content to render within layout
+ * 
+ * Returns:
+ *   Structured layout with header and content area
+ */
 const AppLayout = ({ children }) => {
   return (
     <Box
@@ -752,10 +929,33 @@ const AppLayout = ({ children }) => {
   );
 };
 
-// Main App component
+/**
+ * Main Application Component
+ * =======================
+ * Primary component defining routes and application structure.
+ * 
+ * Process:
+ * 1. Sets up application routes with protection
+ * 2. Manages initial disclaimer acceptance
+ * 3. Handles authentication and login success
+ * 4. Provides global layout to authenticated routes
+ * 
+ * Returns:
+ *   Complete application with routing and layout
+ */
 function App() {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
+  /**
+   * Check if disclaimer has been accepted
+   * 
+   * Process:
+   * 1. Checks localStorage for disclaimer acceptance flag
+   * 2. Shows disclaimer dialog if not previously accepted
+   * 
+   * Side effects:
+   *   Sets showDisclaimer state based on localStorage
+   */
   useEffect(() => {
     const accepted = localStorage.getItem('disclaimerAccepted');
     if (!accepted) {
@@ -763,12 +963,36 @@ function App() {
     }
   }, []);
 
+  /**
+   * Handle disclaimer acceptance
+   * 
+   * Process:
+   * 1. Sets localStorage flag for disclaimer acceptance
+   * 2. Hides disclaimer dialog
+   * 
+   * Side effects:
+   *   Updates localStorage with acceptance flag
+   *   Sets showDisclaimer state to false
+   */
   const handleAcceptDisclaimer = () => {
     localStorage.setItem('disclaimerAccepted', 'true');
     setShowDisclaimer(false);
   };
 
-  // Define handleLoginSuccess function and pass it to LoginForm component
+  /**
+   * Handle successful login
+   * 
+   * Process:
+   * 1. Stores user credentials in localStorage
+   * 2. Logs successful authentication
+   * 
+   * Args:
+   *   userId (String): Authenticated user ID
+   *   username (String): Authenticated username
+   * 
+   * Side effects:
+   *   Updates localStorage with user credentials
+   */
   const handleLoginSuccess = (userId, username) => {
     console.log("User logged in successfully:", userId, username);
     localStorage.setItem('userId', userId);
@@ -778,10 +1002,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Root path directly shows login page */}
+        {/* Root path redirects to login page */}
         <Route path="/" element={<Navigate to="/login" />} />
-        {/* Login page separate route */}
+        
+        {/* Login page - public route */}
         <Route path="/login" element={<LoginForm onLoginSuccess={handleLoginSuccess} />} />
+        
+        {/* Main page - protected route with layout */}
         <Route
           path="/mainPage"
           element={
@@ -792,6 +1019,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Route details page - protected route with layout */}
         <Route
           path="/routes/:routeId"
           element={
@@ -802,6 +1031,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Public routes listing page - protected route with layout */}
         <Route
           path="/public-routes"
           element={
@@ -812,8 +1043,12 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Fallback for undefined routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      
+      {/* Disclaimer dialog - shown on first visit */}
       <Dialog open={showDisclaimer} disableEscapeKeyDown>
         <DialogTitle>Disclaimer</DialogTitle>
         <DialogContent>

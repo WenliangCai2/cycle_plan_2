@@ -1,5 +1,19 @@
 """
-Authentication controller
+Authentication Controller
+=======================
+This module handles user authentication operations including registration,
+login, session management, password management, and email verification.
+
+Features:
+- User registration with email verification
+- User login and session management
+- Password reset functionality
+- Email verification system
+- Session validation
+
+Author: [Author Name]
+Contributors: [Contributors Names]
+Last Modified: [Date]
 """
 import uuid
 from flask import jsonify, request
@@ -8,10 +22,24 @@ from models.user import User
 from utils.email_utils import generate_code, send_verification_email, cache_code, get_cached_code
 
 # Dictionary to store user sessions
+# Maps session tokens to user IDs for authentication
 USER_SESSIONS = {}
 
 def register():
-    """User registration with email verification"""
+    """
+    Handle user registration with email verification
+    
+    Process:
+    1. Validates all required fields
+    2. Verifies email verification code
+    3. Checks username availability
+    4. Validates password requirements
+    5. Creates new user account
+    6. Creates a user session
+    
+    Returns:
+        JSON response with registration status and session token
+    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -69,7 +97,17 @@ def register():
 
 
 def login():
-    """User login"""
+    """
+    Handle user login and session creation
+    
+    Process:
+    1. Validates username exists
+    2. Verifies password
+    3. Creates session token
+    
+    Returns:
+        JSON response with login status and session token
+    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -101,7 +139,18 @@ def login():
     })
 
 def verify_session(request):
-    """Verify user session"""
+    """
+    Verify user session token from request headers
+    
+    This function is used across the application to validate
+    user authentication for protected routes
+    
+    Args:
+        request: Flask request object containing Authorization header
+        
+    Returns:
+        user_id (str): User ID if session is valid, None otherwise
+    """
     token = request.headers.get('Authorization')
     if not token or token not in USER_SESSIONS:
         return None
@@ -111,7 +160,18 @@ def verify_session(request):
     return user_id if user else None
 
 def reset_password():
-    """Reset user password with email verification"""
+    """
+    Handle password reset with email verification
+    
+    Process:
+    1. Validates required fields
+    2. Checks password requirements
+    3. Verifies email verification code
+    4. Updates password
+    
+    Returns:
+        JSON response with password reset status
+    """
     data = request.get_json()
     username = data.get('username')
     new_password = data.get('new_password')
@@ -161,7 +221,16 @@ def reset_password():
 
 
 def logout():
-    """User logout"""
+    """
+    Handle user logout by invalidating session token
+    
+    Process:
+    1. Retrieves session token from request
+    2. Removes token from active sessions
+    
+    Returns:
+        JSON response with logout status
+    """
     token = request.headers.get('Authorization')
     if token and token in USER_SESSIONS:
         del USER_SESSIONS[token]
@@ -176,7 +245,18 @@ def logout():
 
 
 def send_verification_code():
-    """Send verification code via email"""
+    """
+    Send verification code to user's email
+    
+    Process:
+    1. Validates email
+    2. Prevents code request abuse
+    3. Generates and sends verification code
+    4. Caches code for later verification
+    
+    Returns:
+        JSON response with code sending status
+    """
     data = request.get_json()
     email = data.get('email')
     purpose = data.get('purpose', 'register')
@@ -212,7 +292,17 @@ def send_verification_code():
 
 
 def verify_code():
-    """Verify email verification code"""
+    """
+    Verify email verification code entered by user
+    
+    Process:
+    1. Validates required fields
+    2. Checks if code exists in cache
+    3. Compares entered code with cached code
+    
+    Returns:
+        JSON response with verification status
+    """
     data = request.get_json()
     email = data.get('email')
     code = data.get('code')

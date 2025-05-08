@@ -1,5 +1,20 @@
 /**
- * Authentication related API services
+ * Authentication API Service
+ * =======================
+ * This module handles all authentication-related API requests including
+ * user registration, login, and session management.
+ * 
+ * Features:
+ * - User registration with token management
+ * - User login and authentication
+ * - Session persistence with localStorage
+ * - Automatic token inclusion in API requests
+ * - Authentication state checks
+ * - User profile information retrieval
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
  */
 import axios from 'axios';
 
@@ -14,7 +29,14 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add authentication token
+/**
+ * Request interceptor to include authentication token
+ * 
+ * Process:
+ * 1. Retrieves token from localStorage if present
+ * 2. Adds token to request headers for authentication
+ * 3. Handles errors in the request preparation phase
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -29,7 +51,13 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Unified error handling
+/**
+ * Response interceptor for unified error handling
+ * 
+ * Process:
+ * 1. Passes successful responses through unmodified
+ * 2. Logs and standardizes error handling for failed requests
+ */
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -42,8 +70,14 @@ api.interceptors.response.use(
 
 /**
  * User registration
- * @param {string} username - Username
- * @param {string} password - Password
+ * 
+ * Process:
+ * 1. Sends registration credentials to backend
+ * 2. Stores authentication data if successful
+ * 3. Returns response data or throws standardized error
+ * 
+ * @param {string} username - Username for new account
+ * @param {string} password - Password for new account
  * @returns {Promise} - Promise containing registration result
  */
 export const register = async (username, password) => {
@@ -68,6 +102,12 @@ export const register = async (username, password) => {
 
 /**
  * User login
+ * 
+ * Process:
+ * 1. Sends login credentials to backend
+ * 2. Stores authentication data if successful
+ * 3. Returns response data or throws standardized error
+ * 
  * @param {string} username - Username
  * @param {string} password - Password
  * @returns {Promise} - Promise containing login result
@@ -94,7 +134,11 @@ export const login = async (username, password) => {
 
 /**
  * Check if user is logged in
- * @returns {boolean} - Whether user is logged in
+ * 
+ * Process:
+ * 1. Checks if authentication token exists in localStorage
+ * 
+ * @returns {boolean} - Whether user is authenticated
  */
 export const isAuthenticated = () => {
   return !!localStorage.getItem('token');
@@ -102,7 +146,11 @@ export const isAuthenticated = () => {
 
 /**
  * Get current logged in user ID
- * @returns {string|null} - User ID or null
+ * 
+ * Process:
+ * 1. Retrieves user ID from localStorage
+ * 
+ * @returns {string|null} - User ID if available, null otherwise
  */
 export const getCurrentUserId = () => {
   return localStorage.getItem('userId');
@@ -110,6 +158,12 @@ export const getCurrentUserId = () => {
 
 /**
  * User logout
+ * 
+ * Process:
+ * 1. Attempts to notify backend of logout
+ * 2. Clears all authentication data from localStorage
+ * 3. Returns response or standardized error
+ * 
  * @returns {Promise} - Promise containing logout result
  */
 export const logout = async () => {
@@ -131,7 +185,11 @@ export const logout = async () => {
 
 /**
  * Get current username
- * @returns {string|null} - Username or null
+ * 
+ * Process:
+ * 1. Retrieves username from localStorage
+ * 
+ * @returns {string|null} - Username if available, null otherwise
  */
 export const getCurrentUsername = () => {
   return localStorage.getItem('username');
@@ -144,4 +202,4 @@ export default {
   getCurrentUserId,
   logout,
   getCurrentUsername,
-}; 
+};

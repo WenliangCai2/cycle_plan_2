@@ -1,3 +1,24 @@
+/**
+ * Global Styles
+ * =======================
+ * This stylesheet provides global styling for the application,
+ * including base typography, POI controls, and info bubbles.
+ * 
+ * Features:
+ * - Base typography and font settings
+ * - Browser rendering optimizations
+ * - Code block styling
+ * - POI control panel layout and styling
+ * - POI info bubble styling
+ * - Responsive design considerations
+ * - Form element styling for POI controls
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
+
+/* Base body styling with system font stack */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -7,12 +28,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
  
+/* Code block styling with monospace fonts */
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
  
-/* POI control panel styling - add this to your CSS files */
+/* POI control panel container styling */
 .poi-control-panel {
   position: absolute;
   top: 10px;
@@ -26,6 +48,7 @@ code {
   font-family: Arial, sans-serif;
 }
  
+/* POI controls header styling */
 .poi-controls h3 {
   margin-top: 0;
   margin-bottom: 10px;
@@ -33,6 +56,7 @@ code {
   font-weight: bold;
 }
  
+/* POI controls label styling */
 .poi-controls label {
   display: block;
   margin-bottom: 5px;
@@ -40,6 +64,7 @@ code {
   font-size: 14px;
 }
  
+/* POI controls input and select elements */
 .poi-controls input,
 .poi-controls select {
   width: 100%;
@@ -49,6 +74,7 @@ code {
   border-radius: 4px;
 }
  
+/* POI controls button styling */
 .poi-controls button {
   background: #0099FF;
   color: white;
@@ -61,17 +87,19 @@ code {
   transition: background 0.2s;
 }
  
+/* POI controls button hover state */
 .poi-controls button:hover {
   background: #0077CC;
 }
  
-/* POI info bubble styling */
+/* POI info bubble container styling */
 .poi-info-bubble {
   padding: 10px;
   max-width: 250px;
   font-family: Arial, sans-serif;
 }
  
+/* POI info bubble header styling */
 .poi-info-bubble h3 {
   margin-top: 0;
   margin-bottom: 8px;
@@ -79,12 +107,14 @@ code {
   color: #333;
 }
  
+/* POI info bubble paragraph styling */
 .poi-info-bubble p {
   margin: 5px 0;
   font-size: 14px;
   color: #555;
 }
  
+/* POI info bubble link styling */
 .poi-info-bubble a {
   display: inline-block;
   margin-top: 8px;
@@ -93,6 +123,7 @@ code {
   font-weight: bold;
 }
  
+/* POI info bubble link hover state */
 .poi-info-bubble a:hover {
   text-decoration: underline;
 }

@@ -1,3 +1,25 @@
+/**
+ * Login Form Component
+ * =======================
+ * This module provides a comprehensive authentication interface with login,
+ * registration, and password reset functionality in a visually appealing layout.
+ * 
+ * Features:
+ * - User authentication (login and registration)
+ * - Password reset workflow
+ * - Email verification system
+ * - Dark/light mode toggle
+ * - Responsive design for different devices
+ * - Visual feedback for loading and error states
+ * - Password visibility toggle
+ * - Form validation
+ * - Background images that change with theme
+ * - Session storage with localStorage
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -23,16 +45,31 @@ import ExploreIcon from '@mui/icons-material/Explore';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
-// Use web image URLs instead of local images
+// Background images for light/dark themes
 const lightBgImage = "https://images.unsplash.com/photo-1527181152855-fc03fc7949c8?auto=format&w=1000&dpr=2";
 const darkBgImage = "https://images.unsplash.com/photo-1572072393749-3ca9c8ea0831?auto=format&w=1000&dpr=2";
 
-// ColorSchemeToggle component
+/**
+ * ColorSchemeToggle component for switching between light and dark modes
+ * 
+ * Process:
+ * 1. Tracks mounted state to prevent hydration issues
+ * 2. Reads and updates color scheme from context
+ * 3. Toggles between light and dark modes on click
+ * 4. Shows appropriate icon based on current mode
+ * 
+ * Args:
+ *   props (Object): Component props including onClick handler and other props
+ * 
+ * Returns:
+ *   IconButton component for toggling color mode
+ */
 function ColorSchemeToggle(props) {
   const { onClick, ...other } = props;
   const { mode, setMode } = useColorScheme();
   const [mounted, setMounted] = React.useState(false);
 
+  // Prevent hydration issues by waiting for component to mount
   React.useEffect(() => setMounted(true), []);
 
   return (
@@ -52,30 +89,63 @@ function ColorSchemeToggle(props) {
   );
 }
 
-// Custom theme with dark mode as default
+// Custom theme configuration with dark mode as default
 const customTheme = extendTheme({ defaultColorScheme: 'dark' });
 
+/**
+ * LoginForm component providing authentication interface
+ * 
+ * Process:
+ * 1. Manages state for different authentication modes (login, register, reset)
+ * 2. Handles form submission for all authentication actions
+ * 3. Manages email verification code system
+ * 4. Provides visual feedback for errors and loading states
+ * 5. Stores authentication tokens on successful login
+ * 
+ * Args:
+ *   onLoginSuccess (Function): Callback for successful login with user info
+ * 
+ * Returns:
+ *   Complete authentication interface with responsive design
+ */
 const LoginForm = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
-  // Login state control
+  
+  // Authentication mode state
   const [isLogin, setIsLogin] = useState(true);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  
+  // Form field states
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [codeSending, setCodeSending] = useState(false);
   const [password, setPassword] = useState('');
+  
+  // UI state
+  const [codeSending, setCodeSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Form submission handler
+  /**
+   * Handle form submission for all authentication actions
+   * 
+   * Process:
+   * 1. Validates form inputs
+   * 2. Determines appropriate endpoint based on current mode
+   * 3. Sends authentication request to backend API
+   * 4. Processes response and updates UI accordingly
+   * 5. Stores authentication data on successful login
+   * 
+   * Args:
+   *   event (Event): Form submission event
+   */
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMessage('');
     setLoading(true);
 
-    // Require at least 8 character password for registration
+    // Validate password length for registration
     if (!isLogin && password.length < 8) {
       setErrorMessage('Password must be at least 8 characters');
       setLoading(false);
@@ -85,13 +155,14 @@ const LoginForm = ({ onLoginSuccess }) => {
     try {
       let endpoint = '';
 
-      // Select interface based on current state
+      // Select endpoint based on current mode
       if (isResettingPassword) {
         endpoint = 'http://localhost:5000/api/reset_password';
       } else {
         endpoint = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/register';
       }
 
+      // Build appropriate payload based on current mode
       const payload = isResettingPassword
         ? { username, new_password: password, email, code}
         : isLogin
@@ -100,17 +171,21 @@ const LoginForm = ({ onLoginSuccess }) => {
 
       console.log('Sending request to:', endpoint);
 
+      // Send authentication request
       const response = await axios.post(endpoint, payload);
       console.log('Server response:', response.data);
 
+      // Handle successful response
       if (response.data.success) {
         if (isResettingPassword) {
+          // Show success message and return to login
           alert('Password reset successful! Please login.');
           setIsResettingPassword(false);
           setUsername('');
           setPassword('');
           setIsLogin(true);
         } else {
+          // Store authentication data and navigate to main page
           localStorage.setItem('token', response.data.token);
           localStorage.setItem('userId', response.data.userId);
           localStorage.setItem('username', username);
@@ -118,9 +193,11 @@ const LoginForm = ({ onLoginSuccess }) => {
           navigate('/mainPage');
         }
       } else {
+        // Display error message from server
         setErrorMessage(response.data.message || 'Operation failed');
       }
     } catch (error) {
+      // Handle request errors
       console.error('Authentication failed:', error);
       setErrorMessage(error.response?.data?.message || 'Server error, please try again later');
     } finally {
@@ -128,6 +205,15 @@ const LoginForm = ({ onLoginSuccess }) => {
     }
   };
 
+  /**
+   * Send verification code to user's email
+   * 
+   * Process:
+   * 1. Validates email is provided
+   * 2. Sets loading state for UI feedback
+   * 3. Sends verification code request to backend API
+   * 4. Displays success or error message
+   */
   const handleSendCode = async () => {
       if (!email) {
           setErrorMessage('Please enter your email first');
@@ -152,27 +238,52 @@ const LoginForm = ({ onLoginSuccess }) => {
       }
   };
 
-  // Toggle between login/register mode
+  /**
+   * Toggle between login and registration modes
+   * 
+   * Process:
+   * 1. Inverts current login state
+   * 2. Clears any previous error messages
+   */
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setErrorMessage('');
   };
 
-  // Switch to password reset mode
+  /**
+   * Switch to password reset mode
+   * 
+   * Process:
+   * 1. Sets resetting password flag to true
+   * 2. Sets login flag to false
+   * 3. Clears any previous error messages
+   */
   const switchToResetPassword = () => {
     setIsResettingPassword(true);
     setIsLogin(false);
     setErrorMessage('');
   };
 
-  // Return to login mode
+  /**
+   * Return to login mode from password reset
+   * 
+   * Process:
+   * 1. Sets resetting password flag to false
+   * 2. Sets login flag to true
+   * 3. Clears any previous error messages
+   */
   const backToLogin = () => {
     setIsResettingPassword(false);
     setIsLogin(true);
     setErrorMessage('');
   };
   
-  // Toggle password visibility
+  /**
+   * Toggle password visibility
+   * 
+   * Process:
+   * 1. Inverts current showPassword state
+   */
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -188,6 +299,7 @@ const LoginForm = ({ onLoginSuccess }) => {
           },
         }}
       />
+      {/* Left side form container */}
       <Box
         sx={(theme) => ({
           width: { xs: '100%', md: '50vw' },
@@ -213,6 +325,7 @@ const LoginForm = ({ onLoginSuccess }) => {
             px: 2,
           }}
         >
+          {/* Header with logo and theme toggle */}
           <Box
             component="header"
             sx={{ py: 3, display: 'flex', justifyContent: 'space-between' }}
@@ -225,6 +338,8 @@ const LoginForm = ({ onLoginSuccess }) => {
             </Box>
             <ColorSchemeToggle />
           </Box>
+          
+          {/* Main form container */}
           <Box
             component="main"
             sx={{
@@ -248,6 +363,7 @@ const LoginForm = ({ onLoginSuccess }) => {
               },
             }}
           >
+            {/* Back button for password reset mode */}
             {isResettingPassword && (
               <IconButton 
                 onClick={backToLogin} 
@@ -265,6 +381,7 @@ const LoginForm = ({ onLoginSuccess }) => {
               </Alert>
             )}
             
+            {/* Form header */}
             <Stack sx={{ gap: 4, mb: 2 }}>
               <Stack sx={{ gap: 1 }}>
                 <Typography component="h1" level="h3">
@@ -285,8 +402,10 @@ const LoginForm = ({ onLoginSuccess }) => {
               </Stack>
             </Stack>
             
+            {/* Form fields */}
             <Stack sx={{ gap: 4, mt: 2 }}>
                   <form onSubmit={handleSubmit}>
+                      {/* Username field */}
                       <FormControl required>
                           <FormLabel>Username</FormLabel>
                           <Input
@@ -296,7 +415,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                           />
                       </FormControl>
 
-                      {/* Registration and password reset both require email and verification code */}
+                      {/* Email and verification code fields - only for registration and password reset */}
                       {(isResettingPassword || !isLogin) && (
                           <>
                               <FormControl required>
@@ -331,6 +450,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                           </>
                       )}
 
+                      {/* Password field */}
                       <FormControl required>
                           <FormLabel>{isResettingPassword ? 'New Password' : 'Password'}</FormLabel>
                           <Input
@@ -350,6 +470,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                       </FormControl>
 
                       <Stack sx={{ gap: 4, mt: 2 }}>
+                          {/* Remember me and forgot password - only for login mode */}
                           {isLogin && !isResettingPassword && (
                               <Box
                                   sx={{
@@ -369,6 +490,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                               </Box>
                           )}
 
+                          {/* Submit button */}
                           <Button
                               type="submit"
                               fullWidth
@@ -383,9 +505,9 @@ const LoginForm = ({ onLoginSuccess }) => {
                       </Stack>
                   </form>
               </Stack>
-
-
           </Box>
+          
+          {/* Footer */}
           <Box component="footer" sx={{ py: 3 }}>
             <Typography level="body-xs" sx={{ textAlign: 'center' }}>
               © Route Explorer {new Date().getFullYear()}
@@ -393,6 +515,8 @@ const LoginForm = ({ onLoginSuccess }) => {
           </Box>
         </Box>
       </Box>
+      
+      {/* Right side background image */}
       <Box
         sx={(theme) => ({
           height: '100%',

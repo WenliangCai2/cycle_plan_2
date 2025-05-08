@@ -1,5 +1,19 @@
 """
-Vote controller - handles vote-related requests
+Vote Controller
+=============
+This module handles all vote-related operations including creating,
+updating, and retrieving votes for routes. It manages the upvoting and
+downvoting system for public routes in the cycling application.
+
+Features:
+- Create or update votes for public routes
+- Toggle between upvote, downvote, and no vote
+- Retrieve vote statistics for routes
+- Track user's vote status for routes
+
+Author: Zhuoyi Zhang
+Contributors: [Contributors Names]
+Last Modified: 07/05/2025
 """
 from flask import jsonify, request
 from models.vote import Vote
@@ -10,7 +24,21 @@ from controllers.auth_controller import verify_session
 db = None
 
 def create_or_update_vote(route_id):
-    """Create or update a vote"""
+    """
+    Create, update, or remove a vote for a route
+    
+    Process:
+    1. Verifies user authentication
+    2. Validates route exists and is public
+    3. Processes vote action (add, update, or remove)
+    4. Returns updated vote statistics
+    
+    Args:
+        route_id: Unique identifier for the route to vote on
+    
+    Returns:
+        JSON response with vote status and updated statistics or error message
+    """
     user_id = verify_session(request)
     if not user_id:
         return jsonify({
@@ -88,7 +116,20 @@ def create_or_update_vote(route_id):
     })
 
 def get_route_votes(route_id):
-    """Get vote statistics for a route"""
+    """
+    Get vote statistics for a specific route
+    
+    Process:
+    1. Validates route exists and is public
+    2. Retrieves current vote statistics
+    3. Includes the user's own vote if authenticated
+    
+    Args:
+        route_id: Unique identifier for the route
+    
+    Returns:
+        JSON response with vote statistics or error message
+    """
     # Check if the route exists
     route = Route.get_route_by_id(route_id)
     if not route:

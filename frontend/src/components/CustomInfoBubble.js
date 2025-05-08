@@ -1,10 +1,29 @@
+/**
+ * Custom Info Bubble Component
+ * =========================
+ * This module creates custom info bubbles for the HERE Maps API,
+ * designed to show location names and custom styling for map markers.
+ * 
+ * Features:
+ * - Styled info bubbles with modern design
+ * - Close button for dismissing bubbles
+ * - Customizable content for different location types
+ * - React components within HERE Maps
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { Typography, Paper, Box, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 
-// Compact bubble style
+/**
+ * Styled compact bubble component using Material UI
+ * Includes styling for bubble tail and positioning
+ */
 const CompactBubble = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1, 1.5),
   minWidth: '60px',
@@ -25,6 +44,12 @@ const CompactBubble = styled(Paper)(({ theme }) => ({
 
 /**
  * Creates compact info bubble content
+ * 
+ * Process:
+ * 1. Creates container element for the info bubble
+ * 2. Renders React component into the container
+ * 3. Returns DOM element to be used by HERE Maps
+ * 
  * @param {Object} data - Data to show in the bubble
  * @returns {HTMLElement} DOM element with styled bubble
  */
@@ -38,7 +63,10 @@ export const createInfoBubbleContent = (data) => {
   // Add a special class for easier reference
   container.className = 'h-info-bubble-container';
   
-  // Define React component
+  /**
+   * InfoBubbleContent component
+   * Renders the content of the info bubble with styling
+   */
   const InfoBubbleContent = () => (
     <CompactBubble>
       <Box sx={{ 
@@ -79,4 +107,4 @@ export const createInfoBubbleContent = (data) => {
 
 export default {
   createInfoBubbleContent
-}; 
+};

@@ -1,89 +1,122 @@
+/**
+ * Route Vote Styling
+ * =======================
+ * This stylesheet provides styles for the Route Vote component, enhancing
+ * the visual representation of voting elements.
+ * 
+ * Features:
+ * - Consistent styling for vote buttons and counters
+ * - Visual feedback for active vote states
+ * - Different colors for upvotes and downvotes
+ * - Responsive design for different screen sizes
+ * - Visual separators between vote elements
+ * - Container styling with background and shadows
+ * - Status indicator styling for vote feedback
+ * 
+ * Author: Zhuoyi Zhang
+ * Contributors: [Contributors Names]
+ * Last Modified: 07/05/2025
+ */
+
+/* Main container for vote component */
 .route-vote {
-    display: inline-block;
-    margin: 0 10px;
+  display: inline-block;
+  margin: 0 10px;
+}
+
+/* Base button styling for vote buttons */
+.route-vote .ant-btn {
+  border: none;
+  font-size: 16px;
+  padding: 0 8px;
+}
+
+/* Hover state for vote buttons */
+.route-vote .ant-btn:hover {
+  background: none;
+  color: inherit;
+}
+
+/* Active state for upvote button */
+.route-vote .upvote.active {
+  color: #52c41a; /* Green color for upvotes */
+}
+
+/* Active state for downvote button */
+.route-vote .downvote.active {
+  color: #f5222d; /* Red color for downvotes */
+}
+
+/* Vote count styling */
+.route-vote .vote-count {
+  margin: 0 4px;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Upvote count specific color */
+.route-vote .upvote-count {
+  color: #52c41a; /* Green color for upvote count */
+}
+
+/* Downvote count specific color */
+.route-vote .downvote-count {
+  color: #f5222d; /* Red color for downvote count */
+}
+
+/* Divider between vote buttons */
+.route-vote .vote-divider {
+  height: 20px;
+  width: 1px;
+  background-color: #e8e8e8;
+  margin: 0 8px;
+}
+
+/* Container styling for vote buttons and counts */
+.route-vote .ant-space {
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  padding: 4px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .route-vote .ant-space {
+    padding: 2px 8px;
   }
   
   .route-vote .ant-btn {
-    border: none;
-    font-size: 16px;
-    padding: 0 8px;
-  }
-  
-  .route-vote .ant-btn:hover {
-    background: none;
-    color: inherit;
-  }
-  
-  .route-vote .upvote.active {
-    color: #52c41a;
-  }
-  
-  .route-vote .downvote.active {
-    color: #f5222d;
-  }
-  
-  .route-vote .vote-count {
-    margin: 0 4px;
-    font-weight: bold;
-    min-width: 20px;
-    text-align: center;
     font-size: 14px;
   }
   
-  .route-vote .upvote-count {
-    color: #52c41a;
-  }
-  
-  .route-vote .downvote-count {
-    color: #f5222d;
+  .route-vote .vote-count {
+    margin: 0 2px;
+    font-size: 12px;
   }
   
   .route-vote .vote-divider {
-    height: 20px;
-    width: 1px;
-    background-color: #e8e8e8;
-    margin: 0 8px;
+    margin: 0 4px;
   }
-  
-  .route-vote .ant-space {
-    background-color: #f5f5f5;
-    border-radius: 20px;
-    padding: 4px 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .route-vote .ant-space {
-      padding: 2px 8px;
-    }
-    
-    .route-vote .ant-btn {
-      font-size: 14px;
-    }
-    
-    .route-vote .vote-count {
-      margin: 0 2px;
-      font-size: 12px;
-    }
-    
-    .route-vote .vote-divider {
-      margin: 0 4px;
-    }
-  }
+}
 
-  .route-vote .vote-status {
-    font-size: 12px;
-    margin-left: 4px;
-    font-weight: normal;
-  }
-  
-  .route-vote .upvote-status {
-    color: #52c41a; 
-  }
-  
-  .route-vote .downvote-status {
-    color: #f5222d; 
-  }
+/* Status text for vote feedback */
+.route-vote .vote-status {
+  font-size: 12px;
+  margin-left: 4px;
+  font-weight: normal;
+}
+
+/* Upvote status specific styling */
+.route-vote .upvote-status {
+  color: #52c41a; /* Green color for upvote status */
+}
+
+/* Downvote status specific styling */
+.route-vote .downvote-status {
+  color: #f5222d; /* Red color for downvote status */
+}

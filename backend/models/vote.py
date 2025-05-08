@@ -1,5 +1,19 @@
 """
-Vote model for routes - allows users to upvote or downvote public routes
+Vote Model
+=========
+This module defines the data model for votes on routes, implementing
+an upvote/downvote system for public cycling routes.
+
+Features:
+- Create, update, and remove votes
+- Toggle votes by clicking the same vote type twice
+- Track upvotes, downvotes, and overall vote score
+- Retrieve user's vote status for routes
+- Update route documents with current vote counts
+
+Author: Zhuoyi Zhang
+Contributors: [Contributors Names]
+Last Modified: 07/05/2025
 """
 import uuid
 from datetime import datetime
@@ -9,6 +23,15 @@ db = None
 
 class Vote:
     def __init__(self, route_id, user_id, vote_type, vote_id=None):
+        """
+        Initialize a new Vote object
+        
+        Args:
+            route_id: ID of the route being voted on
+            user_id: ID of the user creating the vote
+            vote_type: Integer (1 for upvote, -1 for downvote)
+            vote_id: Unique identifier (auto-generated if None)
+        """
         self.route_id = route_id
         self.user_id = user_id
         self.vote_type = vote_type  # 1 for upvote, -1 for downvote
@@ -16,6 +39,12 @@ class Vote:
         self.created_at = datetime.now()
     
     def to_dict(self):
+        """
+        Convert vote object to dictionary for serialization
+        
+        Returns:
+            Dictionary containing all vote properties
+        """
         return {
             'vote_id': self.vote_id,
             'route_id': self.route_id,
@@ -26,6 +55,15 @@ class Vote:
     
     @staticmethod
     def from_dict(vote_dict):
+        """
+        Create a Vote object from a dictionary
+        
+        Args:
+            vote_dict: Dictionary containing vote data
+            
+        Returns:
+            Vote object populated with dictionary data
+        """
         vote = Vote(
             route_id=vote_dict['route_id'],
             user_id=vote_dict['user_id'],
@@ -37,7 +75,25 @@ class Vote:
     
     @staticmethod
     def create_or_update_vote(route_id, user_id, vote_type):
-        """Create or update a vote"""
+        """
+        Create, update, or remove a vote
+        
+        Process:
+        1. Validates database connection and normalizes vote type
+        2. Checks for existing vote from the user
+        3. Removes vote if clicking same type (toggle behavior)
+        4. Updates vote if changing from upvote to downvote or vice versa
+        5. Creates new vote if user hasn't voted before
+        6. Updates route's vote counts
+        
+        Args:
+            route_id: ID of the route to vote on
+            user_id: ID of the user voting
+            vote_type: Integer (positive for upvote, negative for downvote)
+            
+        Returns:
+            Vote object if created/updated, None if vote was removed
+        """
         global db
         if db is None:
             return None
@@ -96,7 +152,20 @@ class Vote:
     
     @staticmethod
     def get_user_vote(route_id, user_id):
-        """Get user's vote for a specific route"""
+        """
+        Get user's vote for a specific route
+        
+        Process:
+        1. Validates database connection
+        2. Retrieves user's vote for the specified route
+        
+        Args:
+            route_id: ID of the route
+            user_id: ID of the user
+            
+        Returns:
+            Vote object if user has voted, None otherwise
+        """
         global db
         if db is None:
             return None
@@ -113,7 +182,19 @@ class Vote:
     
     @staticmethod
     def get_votes_by_route_id(route_id):
-        """Get all votes for a route"""
+        """
+        Get all votes for a route
+        
+        Process:
+        1. Validates database connection
+        2. Retrieves all votes for the specified route
+        
+        Args:
+            route_id: ID of the route
+            
+        Returns:
+            List of Vote objects for the route
+        """
         global db
         if db is None:
             return []
@@ -124,7 +205,22 @@ class Vote:
     
     @staticmethod
     def update_route_votes(route_id):
-        """Update route votes count"""
+        """
+        Update route votes count
+        
+        Process:
+        1. Validates database connection
+        2. Counts upvotes and downvotes for the route
+        3. Calculates overall vote score
+        4. Updates route document with vote statistics
+        5. Verifies update was successful
+        
+        Args:
+            route_id: ID of the route to update
+            
+        Returns:
+            Boolean indicating if update was successful
+        """
         global db
         if db is None:
             return False

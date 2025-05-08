@@ -1,4 +1,22 @@
-/* Styles for the map container */
+/**
+ * Map Styles
+ * =========
+ * This stylesheet contains all custom styling for map components,
+ * including containers, markers, animations, and controls.
+ * 
+ * Features:
+ * - Responsive map container styling
+ * - Custom marker animations and effects
+ * - Controls panel styling with transparency and blur
+ * - Info bubble customization for cleaner appearance
+ * - Loading overlay and spinner styles
+ * 
+ * Author: [Author Name]
+ * Contributors: [Contributors Names]
+ * Last Modified: [Date]
+ */
+
+/* Map container - Main wrapper for the map component */
 .map-container {
   width: 100%;
   height: 500px;
@@ -8,7 +26,10 @@
   overflow: hidden;
 }
 
-/* Custom marker animation */
+/* 
+ * Custom marker animation
+ * Creates a pulsing effect for special markers to draw attention
+ */
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -24,18 +45,22 @@
   }
 }
 
+/* Apply the pulse animation to markers with the pulse-marker class */
 .pulse-marker {
   animation: pulse 2s infinite;
 }
 
-/* Custom marker hover effect */
+/* Hover effect for all map markers to improve interactivity */
 .H_marker:hover {
   cursor: pointer;
   transform: scale(1.1);
   transition: transform 0.2s ease-in-out;
 }
 
-/* POI control panel styling */
+/* 
+ * POI control panel styling
+ * Semi-transparent panel for Points of Interest controls
+ */
 .poi-control-panel {
   position: absolute;
   bottom: 80px;
@@ -51,10 +76,12 @@
   overflow: hidden;
 }
 
+/* Container for control elements within the POI panel */
 .poi-controls {
   width: 100%;
 }
 
+/* Heading style for the POI controls section */
 .poi-controls h3 {
   margin: 0;
   padding: 8px 12px;
@@ -64,10 +91,12 @@
   font-weight: bold;
 }
 
+/* Container for controls content with padding */
 .poi-controls > div {
   padding: 10px 12px;
 }
 
+/* Label styling for control elements */
 .poi-controls label {
   display: block;
   margin-bottom: 8px;
@@ -75,11 +104,13 @@
   color: white;
 }
 
+/* Range input styling for distance controls */
 .poi-controls input[type="range"] {
   width: 100%;
   margin-bottom: 15px;
 }
 
+/* Select dropdown styling */
 .poi-controls select {
   width: 100%;
   padding: 6px;
@@ -91,6 +122,7 @@
   font-size: 12px;
 }
 
+/* Button styling for POI control actions */
 .poi-controls button {
   width: 100%;
   padding: 6px 12px;
@@ -104,11 +136,15 @@
   font-size: 12px;
 }
 
+/* Hover effect for POI control buttons */
 .poi-controls button:hover {
   background-color: rgba(63, 81, 181, 1);
 }
 
-/* Info bubble customization */
+/* 
+ * Info bubble customization
+ * Overrides HERE Maps default info bubble styling
+ */
 .H_ib {
   min-width: auto !important;
   padding: 0 !important;
@@ -130,20 +166,25 @@
   padding: 0 !important;
 }
 
+/* Hide default close button as we use our own */
 .H_ib_close {
-  display: none !important; /* Hide close button */
+  display: none !important;
 }
 
-/* Click anywhere to close bubble */
+/* Allow clicking anywhere to close bubble */
 .H_ib_notailbg {
   display: none !important;
 }
 
+/* Hide default bubble tail as we create our own */
 .H_ib_tail {
-  display: none !important; /* Hide default bubble tail */
+  display: none !important;
 }
 
-/* Loading overlay */
+/* 
+ * Loading overlay
+ * Shown while map or location data is loading
+ */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -157,6 +198,7 @@
   z-index: 1000;
 }
 
+/* Container for loading spinner and text */
 .loading-spinner {
   display: flex;
   flex-direction: column;
@@ -167,8 +209,9 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Loading text style */
 .loading-text {
   margin-top: 10px;
   font-weight: bold;
   color: #3f51b5;
-} 
+}
